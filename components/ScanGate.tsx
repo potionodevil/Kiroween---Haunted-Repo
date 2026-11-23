@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { ScanResult } from "@/lib/types";
 import { DEMO_REPO, loadResult, saveResult } from "@/lib/client/session";
 import { Sprite } from "@/components/Sprite";
+import { HauntedHouse } from "@/components/house/HauntedHouse";
+import { HuntScene } from "@/components/hunt/HuntScene";
+import { Ritual } from "@/components/exorcism/Ritual";
 
 type State =
   | { status: "loading" }
@@ -22,7 +25,16 @@ interface Props {
   demo: boolean;
   /** Reuse a scan from this tab instead of scanning again. */
   useCache?: boolean;
-  children: (ctx: GateContext) => ReactNode;
+  /** Server pages cannot pass render functions to client components, so they name the view. */
+  view: "house" | "hunt" | "ritual";
+  /** Finding id for the ritual view. */
+  id?: string;
+}
+
+function renderView(view: Props["view"], ctx: GateContext, id?: string): ReactNode {
+  if (view === "hunt") return <HuntScene ctx={ctx} />;
+  if (view === "ritual") return <Ritual id={id ?? ""} ctx={ctx} />;
+  return <HauntedHouse result={ctx.result} demo={ctx.demo} />;
 }
 
 async function fetchScan(repo: string | null, demo: boolean): Promise<ScanResult> {
@@ -40,7 +52,7 @@ async function fetchScan(repo: string | null, demo: boolean): Promise<ScanResult
 }
 
 /** Loads a scan result (cache first if allowed), shows loading and error states, then renders children. */
-export function ScanGate({ repo, demo, useCache = false, children }: Props) {
+export function ScanGate({ repo, demo, useCache = false, view, id }: Props) {
   const [state, setState] = useState<State>({ status: "loading" });
   const key = demo ? DEMO_REPO : repo;
 
@@ -70,7 +82,7 @@ export function ScanGate({ repo, demo, useCache = false, children }: Props) {
     else void run();
   }, [key, useCache, run]);
 
-  if (state.status === "done") return <>{children({ result: state.result, demo, rescan: run })}</>;
+  if (state.status === "done") return <>{renderView(view, { result: state.result, demo, rescan: run }, id)}</>;
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
