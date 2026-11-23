@@ -37,6 +37,7 @@ body {
   background-repeat: no-repeat;
   background-size: calc(var(--fw) * 4) var(--fh);
   image-rendering: pixelated;
+  transform-origin: 50% 100%;
   animation: sprite-frames var(--dur, 0.8s) steps(4) infinite;
 }
 
@@ -66,88 +67,60 @@ body {
   }
 }
 
-/* ---------- Landing: the hero is the first frame of the camera ride ----------
-   Fallback (no animation-timeline or reduced motion): a static hero, no ride. */
-.ride-stage {
-  position: relative;
-  min-height: 100svh;
-  overflow: hidden;
-}
-.ride-scene {
-  position: absolute;
-  inset: 0;
-  /* scene px -> screen px for preserveAspectRatio="xMidYMax slice" on a 320x200 grid */
-  --s: max(calc(100vw / 320), calc(100svh / 200));
-  /* door center is 60 px right of the scene center and 48.5 px above its bottom */
-  transform-origin: calc(50% + 60 * var(--s)) calc(100% - 48.5 * var(--s));
-}
-.ride-hall {
-  display: none;
-  /* decorative layer above the hero: never catch clicks */
-  pointer-events: none;
-}
-
+/* ---------- Landing (ported from the design kit) ---------- */
+@keyframes hrwalk { from { left: -160px; } to { left: 100%; } }
+.walk { position: absolute; animation: hrwalk linear infinite; }
+.lay { position: absolute; inset: 0; background-size: 100% 100%; background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; }
+.l0 { background-image: url(/art/l0_sky.png); }
+.l1 { background-image: url(/art/l1_far.png); }
+.l2 { background-image: url(/art/l2_house.png); }
+.l3 { background-image: url(/art/l3_front.png); }
+@keyframes hrpulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+.doorglow { animation: hrpulse 2.6s ease-in-out infinite; pointer-events: none; }
+@keyframes hrdolly { to { transform: translateZ(940px); } }
+@keyframes hrout { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hrhall { from { opacity: 0; transform: translateZ(-420px); } to { opacity: 1; transform: none; } }
+@keyframes hrdrift { 0%, 100% { margin-left: 0; } 50% { margin-left: 6%; } }
+.fog { animation: hrdrift 18s ease-in-out infinite; pointer-events: none; }
+.fog2 { animation-duration: 26s; animation-direction: reverse; }
+@keyframes hrcap { 0% { opacity: 0; transform: translateY(24px); } 25%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-24px); } }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .ride {
-      height: 260svh;
-      view-timeline: --ride block;
-    }
-    .ride-stage {
-      position: sticky;
-      top: 0;
-      height: 100svh;
-    }
-    .ride-copy {
-      animation: ride-fade linear both;
-      animation-timeline: --ride;
-      animation-range: contain 0% contain 16%;
-    }
-    .ride-scene {
-      animation: ride-cam ease-in both;
-      animation-timeline: --ride;
-      animation-range: contain 8% contain 58%;
-    }
-    .ride-hall {
-      display: block;
-      position: absolute;
-      inset: 0;
-      animation: ride-hall linear both;
-      animation-timeline: --ride;
-      animation-range: contain 50% contain 72%;
-    }
-  }
+  .dolly { view-timeline: --dolly block; }
+  .fx { animation-timeline: --dolly; animation-fill-mode: both; animation-timing-function: linear; animation-duration: auto; }
+  .facade { animation-name: hrdolly, hrout; animation-range: contain 0% contain 70%; }
+  .hall { animation-name: hrhall; animation-range: contain 38% contain 80%; }
+  .cap1 { animation-name: hrout; animation-range: contain 0% contain 22%; }
+  .cap2 { animation-name: hrcap; animation-range: contain 24% contain 58%; }
+  .cap3 { animation-name: hrcap; animation-range: contain 60% contain 100%; }
 }
-
-@keyframes ride-fade {
-  to {
-    opacity: 0;
-    transform: translateY(-40px);
-    visibility: hidden;
-  }
+@supports not (animation-timeline: view()) {
+  .dolly { height: auto !important; }
+  .facade, .cap2 { display: none; }
+  .sticky-stage { position: relative !important; }
 }
-@keyframes ride-cam {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(16);
-    opacity: 0;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .fx, .walk, .fog, .doorglow { animation: none !important; }
+  .facade, .cap2 { display: none; }
 }
-@keyframes ride-hall {
-  from {
-    opacity: 0;
-    transform: scale(1.2);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; }
+.tcard { position: relative; display: block; width: 100%; aspect-ratio: 5/7; padding: 0; border: 0; background: none; cursor: pointer; perspective: 1100px; font-family: inherit; color: inherit; --rx: 0deg; --ry: 0deg; --mx: 50; }
+.tinner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + var(--flip, 0deg))); }
+.tcard:hover .tinner { transition: transform 0.08s linear; }
+.tface { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
+.tback { transform: rotateY(180deg); }
+.holo { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity 0.2s; background: linear-gradient(115deg, transparent 25%, #7fd6c955 42%, #f2b54455 52%, #c9a6ff44 60%, transparent 75%); background-size: 250% 100%; background-position: calc(var(--mx) * 1%) 50%; }
+.tcard:hover .holo, .tcard:focus-visible .holo { opacity: 1; }
+.tcard:focus-visible { outline: 3px solid #f2b544; outline-offset: 6px; border-radius: 18px; }
+.egg { position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 50%; }
+.egg:focus-visible { outline: 2px dashed #f2b544; outline-offset: 4px; }
+@keyframes hrswarm { from { transform: translateX(-20vw); } to { transform: translateX(120vw); } }
+.swarm { position: absolute; left: 0; animation: hrswarm 4.5s linear forwards; }
+@keyframes hrpop { from { opacity: 0; transform: translateY(8px) scale(0.9); } to { opacity: 1; transform: none; } }
+.pop { animation: hrpop 0.25s ease-out both; }
+@keyframes hrlegend { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@media (prefers-reduced-motion: reduce) {
+  .tinner { transition: none; }
+  .holo, .swarm { display: none; }
 }
 
 /* Diamond wallpaper used behind creature grids and cards. */
@@ -155,6 +128,47 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'%3E%3Cg fill='%232c2140'%3E%3Crect x='23' y='10' width='2' height='2'/%3E%3Crect x='21' y='12' width='6' height='2'/%3E%3Crect x='19' y='14' width='2' height='2'/%3E%3Crect x='27' y='14' width='2' height='2'/%3E%3Crect x='21' y='16' width='6' height='2'/%3E%3Crect x='23' y='18' width='2' height='2'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 48px 48px;
 }
+
+
+/* ---------- Scan screen (design kit) ---------- */
+@keyframes hrbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.hr-bob { animation: hrbob 4s ease-in-out infinite; }
+.wp { background: #1c1229 url(/art/wallpaper.png) repeat 0 0 / 128px 128px; image-rendering: pixelated; }
+.card3d { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card3d:hover, .card3d:focus-visible { transform: perspective(900px) rotateX(7deg) translateY(-6px); box-shadow: 0 18px 30px #00000055; }
+.card3d:focus-visible { outline: 3px solid #f2b544; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .hr-bob { animation: none !important; } }
+
+
+/* ---------- Live hunt (design kit) ---------- */
+@keyframes hrwave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-26px); } }
+.hr-e { position: absolute; background: none; border: 0; padding: 0; cursor: pointer; animation: hrwalk linear infinite; }
+.hr-e:hover, .hr-e:focus-visible { animation-play-state: paused; z-index: 5; }
+.hr-e:hover .sprite, .hr-e:focus-visible .sprite { animation-play-state: paused; }
+.hr-e:focus-visible { outline: 2px solid #f2b544; outline-offset: 6px; border-radius: 8px; }
+.hr-tip { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); width: 260px; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.hr-e:hover .hr-tip, .hr-e:focus-visible .hr-tip { opacity: 1; }
+.hr-wave { animation: hrwave 1.6s ease-in-out infinite; }
+.bcard { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+.bcard:hover { transform: perspective(700px) rotateX(10deg) rotateY(-8deg) translateY(-6px); border-color: #f2b544 !important; box-shadow: 0 16px 28px #00000066; }
+.hallbg { background: #2c1e40 url(/art/hall.png) repeat-x 0 0 / auto 100%; image-rendering: pixelated; }
+@media (prefers-reduced-motion: reduce) {
+  .bcard { transition: none; }
+  .bcard:hover { transform: none; }
+  .hr-e, .hr-wave { animation: none !important; }
+}
+
+
+/* ---------- Séance room (design kit) ---------- */
+@keyframes hrglow { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
+@keyframes hrline { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes hrrise { from { opacity: 0; transform: translateY(18px) rotateX(12deg); } to { opacity: 1; transform: none; } }
+.orb { animation: hrglow 3.2s ease-in-out infinite; }
+.seanceart { background: url(/art/seance.png) no-repeat center bottom / contain; image-rendering: pixelated; }
+@media (max-width: 1100px) { .seanceart, .orb { display: none; } }
+.logline { animation: hrline 0.25s ease-out both; }
+.rise { animation: hrrise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .orb, .logline, .rise { animation: none !important; } }
 
 /* Live hunt: wrapper walks between --x0 and --x1, zombies turn around at each end. */
 .hunt-mover {
@@ -216,4 +230,12 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------- Autopsy report print layout ---------- */
+@media print {
+  .no-print { display: none !important; }
+  html, body, .report { background: #fff !important; color: #111 !important; }
+  .report * { color: #111 !important; background: transparent !important; border-color: #ccc !important; box-shadow: none !important; }
+  .report .sprite { display: none; }
 }

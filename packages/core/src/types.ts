@@ -58,6 +58,8 @@ export interface Finding {
   confidence?: Confidence;
   /** Files and lines that support the finding, e.g. "README.md@9c1d8e4". */
   evidence?: string[];
+  /** Ghosts of revocable types: server-sealed ciphertext for /api/revoke. Never the raw value. */
+  revokeHandle?: string;
   /** Ghost-only details for the ritual timeline. */
   ghost?: GhostTrail;
 }
@@ -84,4 +86,17 @@ export interface ScanResult {
   notes: string[];
   findings: Finding[];
   score: number;
+  /** Detected stack (skeleton scanner). */
+  stack?: {
+    language: string;
+    framework?: string;
+    database?: string;
+    orm?: string;
+    auth?: string;
+    hosting?: string;
+    testRunner?: string;
+    ci?: string;
+  };
+  /** Resolved dependencies, for the SBOM export. */
+  packages?: { name: string; version: string; ecosystem: string }[];
 }

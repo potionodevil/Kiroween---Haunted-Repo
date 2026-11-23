@@ -18,45 +18,45 @@
     "sheet": "bat_sheet.png"
   },
   "vampire": {
-    "frame_w": 96,
-    "frame_h": 114,
-    "frames": 4,
-    "sheet": "vampire_sheet.png"
+    "frame_w": 108,
+    "frame_h": 126,
+    "sheet": "vampire_sheet.png",
+    "frames": 4
   },
   "spider": {
     "frame_w": 120,
     "frame_h": 72,
-    "frames": 4,
-    "sheet": "spider_sheet.png"
+    "sheet": "spider_sheet.png",
+    "frames": 4
   },
   "poltergeist": {
     "frame_w": 108,
     "frame_h": 114,
-    "frames": 4,
-    "sheet": "poltergeist_sheet.png"
+    "sheet": "poltergeist_sheet.png",
+    "frames": 4
+  },
+  "skeleton": {
+    "frame_w": 96,
+    "frame_h": 120,
+    "sheet": "skeleton_sheet.png",
+    "frames": 4
+  },
+  "mummy": {
+    "frame_w": 108,
+    "frame_h": 120,
+    "sheet": "mummy_sheet.png",
+    "frames": 4
   },
   "possessed": {
-    "frame_w": 96,
-    "frame_h": 102,
-    "frames": 4,
-    "sheet": "possessed_sheet.png"
+    "frame_w": 108,
+    "frame_h": 114,
+    "sheet": "possessed_sheet.png",
+    "frames": 4
   },
   "banshee": {
     "frame_w": 120,
-    "frame_h": 108,
-    "frames": 4,
-    "sheet": "banshee_sheet.png"
-  },
-  "skeleton": {
-    "frame_w": 72,
     "frame_h": 120,
-    "frames": 4,
-    "sheet": "skeleton_sheet.png"
-  },
-  "mummy": {
-    "frame_w": 96,
-    "frame_h": 120,
-    "frames": 4,
-    "sheet": "mummy_sheet.png"
+    "sheet": "banshee_sheet.png",
+    "frames": 4
   }
 }

@@ -2,6 +2,12 @@ import type { CSSProperties } from "react";
 import type { CreatureKind } from "@haunted/core";
 import { KIND_COLOR, KIND_LABEL, PLACEHOLDER_SIZE, SPRITES } from "@/lib/sprites";
 
+/** One full 4-frame cycle per kind, from the design kit. */
+const FRAME_SECONDS: Record<CreatureKind, number> = {
+  ghost: 0.7, zombie: 0.6, bat: 0.4, vampire: 0.8, spider: 0.35,
+  poltergeist: 0.6, skeleton: 0.6, mummy: 0.8, possessed: 0.5, banshee: 0.5,
+};
+
 interface Props {
   kind: CreatureKind;
   /** Multiplier on the 6x base size. */
@@ -37,7 +43,7 @@ export function Sprite({ kind, scale = 1, paused = false, className = "" }: Prop
     "--fw": `${Math.round(s.w * scale)}px`,
     "--fh": `${Math.round(s.h * scale)}px`,
     "--sheet": `url(${s.sheet})`,
-    "--dur": kind === "bat" ? "0.45s" : "0.8s",
+    "--dur": `${FRAME_SECONDS[kind]}s`,
     animationPlayState: paused ? "paused" : undefined,
   } as CSSProperties;
   return <span aria-hidden="true" className={`sprite ${className}`} style={style} />;

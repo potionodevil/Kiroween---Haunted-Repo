@@ -30,12 +30,19 @@ export interface SecretHit {
   line: number;
   commit: string;
   date: string | null;
+  /** Ciphertext from ctx.seal, never the raw value. */
+  sealed?: string;
 }
 
 export interface LineContext {
   file: string;
   commit: string;
   date: string | null;
+  /**
+   * Optional sealing hook (server only): turns a raw value of an allowed rule into ciphertext,
+   * e.g. so a GitHub token can be revoked later without the raw value ever leaving the server.
+   */
+  seal?: (ruleId: string, value: string) => string | undefined;
 }
 
 function hashValue(v: string): string {
@@ -61,6 +68,7 @@ export function scanLine(text: string, line: number, ctx: LineContext): SecretHi
       line,
       commit: ctx.commit,
       date: ctx.date,
+      sealed: ctx.seal?.(rule.id, value),
     });
   };
 
@@ -176,6 +184,7 @@ export function collectGhosts(hits: SecretHit[], headHits?: SecretHit[]): Findin
       blastRadius: blastRadiusFor(first.rule.id),
       autoFixable: false,
       masked: first.preview,
+      revokeHandle: group.find((h) => h.sealed)?.sealed ?? atHead.get(hash)?.sealed,
       evidence: copies.map((c) => `${c.file}@${c.commit}`),
       ghost: {
         firstSeen: { commit: first.commit, date: first.date, file: first.file, line: first.line },

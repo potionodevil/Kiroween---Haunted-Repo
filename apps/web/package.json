@@ -5,17 +5,20 @@
   "license": "MIT",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@haunted/core": "workspace:*",
     "@haunted/github": "workspace:*",
+    "@typescript-eslint/parser": "^8.73.0",
+    "eslint": "^10.15.0",
     "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.5",
@@ -24,6 +27,6 @@
     "@types/react-dom": "^19.3.0",
     "postcss": "^8.5.33",
     "tailwindcss": "^4.3.5",
-    "typescript": "^7.0.2"
+    "typescript": "~5.9.3"
   }
 }

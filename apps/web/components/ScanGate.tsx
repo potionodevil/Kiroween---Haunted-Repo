@@ -7,6 +7,7 @@ import { Sprite } from "@/components/Sprite";
 import { HauntedHouse } from "@/components/house/HauntedHouse";
 import { HuntScene } from "@/components/hunt/HuntScene";
 import { Ritual } from "@/components/exorcism/Ritual";
+import { Report } from "@/components/report/Report";
 
 type State =
   | { status: "loading" }
@@ -26,7 +27,7 @@ interface Props {
   /** Reuse a scan from this tab instead of scanning again. */
   useCache?: boolean;
   /** Server pages cannot pass render functions to client components, so they name the view. */
-  view: "house" | "hunt" | "ritual";
+  view: "house" | "hunt" | "ritual" | "report";
   /** Finding id for the ritual view. */
   id?: string;
 }
@@ -34,6 +35,7 @@ interface Props {
 function renderView(view: Props["view"], ctx: GateContext, id?: string): ReactNode {
   if (view === "hunt") return <HuntScene ctx={ctx} />;
   if (view === "ritual") return <Ritual id={id ?? ""} ctx={ctx} />;
+  if (view === "report") return <Report ctx={ctx} />;
   return <HauntedHouse result={ctx.result} demo={ctx.demo} />;
 }
 

@@ -12,6 +12,9 @@ const SECRET_FILE =
   /(?:^|\/)(?:\.env[^/]*|\.npmrc|\.pypirc|docker-compose[^/]*\.ya?ml|Dockerfile)$|\.(?:json|ya?ml|toml|ini|cfg|conf|properties|sh|bash|zsh|ps1|py|rb|php|go|java|kt|cs|tf|tfvars|md|txt|xml|pem|key)$/i;
 const LOCKFILE = /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|requirements\.txt)$/;
 const WORKFLOW = /^\.github\/workflows\/[^/]+\.ya?ml$/;
+/** Repo setup, docs, stack and agent files read by poltergeists, mummies, skeletons and the possessed. */
+const META_FILE =
+  /^(?:README(?:\.[a-z]+)?|readme\.md|\.gitignore|SECURITY\.md|\.github\/SECURITY\.md|CONTRIBUTING\.md|AGENTS\.md|CLAUDE\.md|\.cursorrules|LICENSE(?:\.[a-z]+)?|docker-compose[^/]*\.ya?ml|Dockerfile|go\.mod|pyproject\.toml|vercel\.json|netlify\.toml)$|(?:^|\/)(?:package\.json|schema\.prisma|mcp\.json|claude_desktop_config\.json|drizzle\.config\.[jt]s)$|^\.kiro\/steering\/[^/]+\.md$|^\.haunted\/decoys\.json$/i;
 
 export interface TreeEntry {
   path: string;
@@ -28,6 +31,10 @@ export interface RepoTree {
   secretFiles: TreeEntry[];
   lockfiles: TreeEntry[];
   workflows: TreeEntry[];
+  /** Setup, docs, stack and agent files (max 60). */
+  meta: TreeEntry[];
+  /** Every blob path outside vendored folders. */
+  paths: string[];
   truncated: boolean;
 }
 
@@ -47,6 +54,8 @@ export async function fetchTree(owner: string, repo: string, branch: string, sig
     secretFiles: small.filter((e) => !codeSet.has(e.path) && SECRET_FILE.test(e.path) && !LOCKFILE.test(e.path)).slice(0, MAX_SECRET_FILES),
     lockfiles: blobs.filter((e) => LOCKFILE.test(e.path) && e.size <= 20 * 1024 * 1024),
     workflows: small.filter((e) => WORKFLOW.test(e.path)),
+    meta: small.filter((e) => META_FILE.test(e.path)).slice(0, 60),
+    paths: blobs.map((e) => e.path),
     truncated: Boolean(t.truncated),
   };
 }
