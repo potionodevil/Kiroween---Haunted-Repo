@@ -83,6 +83,8 @@ body {
 }
 .ride-hall {
   display: none;
+  /* decorative layer above the hero: never catch clicks */
+  pointer-events: none;
 }
 
 @supports (animation-timeline: view()) {

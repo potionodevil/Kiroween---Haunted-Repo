@@ -22,7 +22,7 @@ export function HeroRide() {
         {/* keeps the copy readable over the scene */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-plum-night/85 via-plum-night/40 to-transparent" />
 
-        <div className="ride-copy relative mx-auto flex min-h-[inherit] max-w-6xl flex-col px-4 sm:px-6">
+        <div className="ride-copy relative z-10 mx-auto flex min-h-[inherit] max-w-6xl flex-col px-4 sm:px-6">
           <header className="flex items-center justify-between py-5">
             <Logo />
             <nav aria-label="Main" className="flex gap-6 text-sm text-bone/80">
