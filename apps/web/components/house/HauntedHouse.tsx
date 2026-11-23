@@ -63,6 +63,9 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           <Link href={`/hunt?${q}`} className="rounded-lg border border-dust px-3 py-2 text-sm hover:border-bone/50">
             Live hunt
           </Link>
+          <Link href={`/seance?${q}`} className="rounded-lg border border-dust px-3 py-2 text-sm hover:border-bone/50">
+            Séance room
+          </Link>
           <Link href="/" className="rounded-lg border border-dust px-3 py-2 text-sm hover:border-bone/50">
             New scan
           </Link>

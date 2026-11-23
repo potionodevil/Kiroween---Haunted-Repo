@@ -12,3 +12,4 @@ export { SECRET_RULES, type SecretRule } from "./secrets/rules";
 export { scanLine, scanText, scanPatch, collectGhosts, type SecretHit, type LineContext } from "./secrets/scan";
 export { buildRitual, templateFor, TEMPLATE_BY_RULE, type RitualStep, type RitualTemplate, type StepId } from "./exorcism/templates";
 export { DEMO_RESULT } from "./demo/spooky-shop";
+export { SEANCE_RUN, SEANCE_FINDING, type SeanceLine, type SeanceTone } from "./demo/seance";
