@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { CreatureKind, Finding, ScanResult } from "@/lib/types";
+import { useBanished } from "@/lib/client/useBanished";
+import { scanQuery } from "@/lib/client/session";
 import { score as calcScore, scoreLabel } from "@/lib/scanner/score";
 import { KIND_LABEL } from "@/lib/sprites";
 import { Logo } from "@/components/Logo";
@@ -19,41 +21,15 @@ const COUNTER_HINT: Record<CreatureKind, string> = {
   bat: "slow loops, heavy bundles, leaks",
 };
 
-function storageKey(repo: string) {
-  return `haunted:banished:${repo}`;
-}
-
-export function HauntedHouse({ result }: { result: ScanResult }) {
+export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boolean }) {
   const { findings } = result;
   const [filter, setFilter] = useState<Filter>("all");
   const [pinned, setPinned] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [banished, setBanished] = useState<Set<string>>(new Set());
+  const { banished, banish } = useBanished(result.repo);
   const [bulkPatch, setBulkPatch] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // Restore progress for this repo (shared with exorcism page and live hunt).
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(storageKey(result.repo));
-      if (raw) setBanished(new Set(JSON.parse(raw) as string[]));
-    } catch {
-      /* ignore broken storage */
-    }
-  }, [result.repo]);
-
-  const banish = (ids: string[]) => {
-    setBanished((prev) => {
-      const next = new Set(prev);
-      ids.forEach((id) => next.add(id));
-      try {
-        sessionStorage.setItem(storageKey(result.repo), JSON.stringify([...next]));
-      } catch {
-        /* storage full or blocked */
-      }
-      return next;
-    });
-  };
+  const q = scanQuery(result.repo, demo);
 
   const alive = useMemo(() => findings.filter((f) => !banished.has(f.id)), [findings, banished]);
   const count = (k: CreatureKind) => alive.filter((f) => f.kind === k).length;
@@ -88,6 +64,9 @@ export function HauntedHouse({ result }: { result: ScanResult }) {
           >
             Fix all auto-fixable ({autoFixable.length})
           </button>
+          <Link href={`/hunt?${q}`} className="rounded-lg border border-dust px-3 py-2 text-sm hover:border-bone/50">
+            Live hunt
+          </Link>
           <Link href="/" className="rounded-lg border border-dust px-3 py-2 text-sm hover:border-bone/50">
             New scan
           </Link>
@@ -160,7 +139,12 @@ export function HauntedHouse({ result }: { result: ScanResult }) {
           {visible.length === 0 && <p className="p-6 text-bone/60">No creatures of this kind.</p>}
         </div>
         <div className="lg:sticky lg:top-4">
-          <DetailPanel finding={active} banished={active ? banished.has(active.id) : false} onBanish={onBanish} />
+          <DetailPanel
+            finding={active}
+            banished={active ? banished.has(active.id) : false}
+            onBanish={onBanish}
+            ritualHref={active ? `/exorcism/${active.id}?${q}` : "#"}
+          />
         </div>
       </div>
 

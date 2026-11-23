@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Finding } from "@/lib/types";
 import { KIND_LABEL } from "@/lib/sprites";
 import { SeverityBadge } from "./SeverityBadge";
@@ -7,9 +8,10 @@ interface Props {
   finding: Finding | undefined;
   banished: boolean;
   onBanish: (f: Finding) => void;
+  ritualHref: string;
 }
 
-export function DetailPanel({ finding: f, banished, onBanish }: Props) {
+export function DetailPanel({ finding: f, banished, onBanish, ritualHref }: Props) {
   if (!f) {
     return (
       <aside className="rounded-2xl border border-dust bg-crypt p-5 text-bone/70">
@@ -60,14 +62,12 @@ export function DetailPanel({ finding: f, banished, onBanish }: Props) {
             >
               Mark as exorcised
             </button>
-            <button
-              type="button"
-              disabled
-              title="The ritual page comes next"
-              className="w-full rounded-lg border border-dust px-4 py-2.5 text-bone/50"
+            <Link
+              href={ritualHref}
+              className="block w-full rounded-lg border border-dust px-4 py-2.5 text-center hover:border-bone/50"
             >
               Open the exorcism ritual
-            </button>
+            </Link>
           </>
         ) : f.autoFixable ? (
           <button

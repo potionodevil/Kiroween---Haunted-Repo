@@ -49,6 +49,52 @@ body {
   }
 }
 
+/* Live hunt: wrapper walks between --x0 and --x1, zombies turn around at each end. */
+.hunt-mover {
+  animation: hunt-move var(--d, 10s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes hunt-move {
+  from {
+    left: var(--x0);
+  }
+  to {
+    left: var(--x1);
+  }
+}
+
+.hunt-flip {
+  animation: hunt-flip calc(var(--d, 10s) * 2) step-end var(--delay, 0s) infinite;
+}
+
+@keyframes hunt-flip {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+}
+
+.hunt-vanish {
+  animation: hunt-vanish 0.45s ease-in forwards;
+}
+
+@keyframes hunt-vanish {
+  to {
+    opacity: 0;
+    transform: translateY(-24px) scale(1.4);
+    filter: brightness(2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hunt-mover,
+  .hunt-flip {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sprite {
     animation: none !important;
