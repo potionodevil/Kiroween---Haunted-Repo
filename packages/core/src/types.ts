@@ -1,14 +1,15 @@
+/** Display order: security creatures first, then code health. */
 export const CREATURE_KINDS = [
   "ghost",
   "vampire",
   "spider",
   "poltergeist",
+  "possessed",
   "zombie",
   "bat",
+  "banshee",
   "skeleton",
   "mummy",
-  "possessed",
-  "banshee",
 ] as const;
 
 export type CreatureKind = (typeof CREATURE_KINDS)[number];
@@ -63,7 +64,9 @@ export interface Finding {
 
 export interface GhostTrail {
   firstSeen: { commit: string; date: string | null; file: string; line: number };
-  copies: { commit: string; file: string }[];
+  copies: { commit: string; file: string; date?: string | null }[];
+  /** ISO date the file holding the secret was deleted, when known. */
+  deletedAt?: string;
   /** Commits still containing the secret. */
   commitCount: number;
   /** True when the secret is gone from HEAD but lives on in history. */

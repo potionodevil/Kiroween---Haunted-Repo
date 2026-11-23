@@ -150,10 +150,10 @@ export function collectGhosts(hits: SecretHit[], headHits?: SecretHit[]): Findin
       .slice(0, -1)
       .reverse()
       .filter((h) => h.commit !== first.commit || h.file !== first.file)
-      .map((h) => ({ commit: h.commit, file: h.file }));
+      .map((h) => ({ commit: h.commit, file: h.file, date: h.date }));
     const head = atHead.get(hash);
     if (head && head.file !== first.file && !copies.some((c) => c.file === head.file)) {
-      copies.push({ commit: HEAD, file: head.file });
+      copies.push({ commit: HEAD, file: head.file, date: null });
     }
     const deletedAtHead = headHits ? !head : undefined;
     const message = deletedAtHead

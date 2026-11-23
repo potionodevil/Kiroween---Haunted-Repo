@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { parseRepo } from "@haunted/core";
 
-export function RepoForm() {
+export function RepoForm({ hint = "Free for public repos. Secrets are masked and never stored." }: { hint?: string }) {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +35,14 @@ export function RepoForm() {
           placeholder="github.com/you/your-repo"
           aria-invalid={error ? true : undefined}
           aria-describedby={hintId}
-          className="min-w-0 flex-1 rounded-lg border border-dust bg-crypt px-4 py-3 font-mono text-sm placeholder:text-bone/40"
+          className="min-w-0 flex-1 rounded-lg border border-dust bg-plum-night/80 px-4 py-3 text-sm placeholder:text-bone/45"
         />
         <button type="submit" className="rounded-lg bg-lantern px-5 py-3 font-semibold text-plum-night hover:brightness-105">
           Scan my repo
         </button>
       </div>
       <p id={hintId} className={`mt-2 text-xs ${error ? "text-lantern" : "text-bone/60"}`}>
-        {error ?? "Free for public repos. Secrets are masked and never stored."}
+        {error ?? hint}
       </p>
     </form>
   );

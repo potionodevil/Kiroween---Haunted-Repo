@@ -135,7 +135,7 @@ describe("collectGhosts", () => {
     expect(g.id).toMatch(/^g_[0-9a-f]{12}$/);
     expect(g.commit).toBe("a3f91c2");
     expect(g.ghost?.commitCount).toBe(2);
-    expect(g.ghost?.copies).toEqual([{ commit: "9c1d8e4", file: "README.md" }]);
+    expect(g.ghost?.copies).toEqual([{ commit: "9c1d8e4", file: "README.md", date: "2026-04-02" }]);
     expect(g.autoFixable).toBe(false);
   });
   it("gives a stable id for the same secret", () => {

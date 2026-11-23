@@ -122,7 +122,7 @@ export function buildRitual(f: Finding): RitualStep[] {
       id: "guard",
       title: "Keep it from coming back",
       body: "Enable the Haunted Repo pre-commit hook so a new key never reaches a commit.",
-      command: "npx haunted-repo install-hooks",
+      command: "npx haunted-repo install-hook",
     },
   ];
 }

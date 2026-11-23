@@ -66,104 +66,62 @@ body {
   }
 }
 
-/* ---------- Landing camera ride ----------
-   Default = fallback: static hallway. Scroll ride only with animation-timeline and motion allowed. */
+/* ---------- Landing: the hero is the first frame of the camera ride ----------
+   Fallback (no animation-timeline or reduced motion): a static hero, no ride. */
 .ride-stage {
   position: relative;
-  height: 80vh;
-  min-height: 460px;
+  min-height: 100svh;
   overflow: hidden;
-  border-block: 1px solid var(--color-dust);
-  background: var(--color-crypt);
 }
-.ride-house-wrap,
-.ride-cap1 {
-  display: none;
-}
-.ride-hall {
+.ride-scene {
   position: absolute;
   inset: 0;
+  /* scene px -> screen px for preserveAspectRatio="xMidYMax slice" on a 320x200 grid */
+  --s: max(calc(100vw / 320), calc(100svh / 200));
+  /* door center is 60 px right of the scene center and 48.5 px above its bottom */
+  transform-origin: calc(50% + 60 * var(--s)) calc(100% - 48.5 * var(--s));
 }
-.ride-house {
-  position: relative;
-  width: min(78vw, 62vh);
-  aspect-ratio: 300 / 280;
-  perspective: 900px;
-  transform-origin: 50% 78.5%;
-}
-/* door rect in the 300x280 viewBox: x 115..185, y 165..279 */
-.ride-light,
-.ride-door {
-  position: absolute;
-  left: 38.33%;
-  width: 23.33%;
-  top: 58.9%;
-  height: 40.8%;
-  border-radius: 999px 999px 0 0;
-}
-.ride-light {
-  background: radial-gradient(ellipse at 50% 70%, var(--color-lantern), #b9781f 70%);
-}
-.ride-door {
-  background: #2c1f3d;
-  border: 2px solid var(--color-dust);
-  transform-origin: left center;
-  backface-visibility: hidden;
+.ride-hall {
+  display: none;
 }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .ride {
-      height: 320vh;
+      height: 260svh;
       view-timeline: --ride block;
     }
     .ride-stage {
       position: sticky;
       top: 0;
-      height: 100vh;
-      border: 0;
-      background: var(--color-plum-night);
+      height: 100svh;
     }
-    .ride-house-wrap {
-      display: flex;
-      position: absolute;
-      inset: 0;
-      align-items: center;
-      justify-content: center;
+    .ride-copy {
+      animation: ride-fade linear both;
+      animation-timeline: --ride;
+      animation-range: contain 0% contain 16%;
     }
-    .ride-house {
+    .ride-scene {
       animation: ride-cam ease-in both;
       animation-timeline: --ride;
-      animation-range: contain 28% contain 72%;
-    }
-    .ride-door {
-      animation: ride-door linear both;
-      animation-timeline: --ride;
-      animation-range: contain 2% contain 30%;
-    }
-    .ride-cap1 {
-      display: block;
-      position: absolute;
-      inset-inline: 0;
-      top: 9vh;
-      text-align: center;
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      animation: ride-cap linear both;
-      animation-timeline: --ride;
-      animation-range: contain 0% contain 40%;
+      animation-range: contain 8% contain 58%;
     }
     .ride-hall {
-      background: var(--color-crypt);
+      display: block;
+      position: absolute;
+      inset: 0;
       animation: ride-hall linear both;
       animation-timeline: --ride;
-      animation-range: contain 62% contain 82%;
+      animation-range: contain 50% contain 72%;
     }
   }
 }
 
-@keyframes ride-door {
+@keyframes ride-fade {
   to {
-    transform: rotateY(-105deg);
+    opacity: 0;
+    transform: translateY(-40px);
+    visibility: hidden;
   }
 }
 @keyframes ride-cam {
@@ -171,35 +129,29 @@ body {
     transform: scale(1);
     opacity: 1;
   }
-  80% {
+  85% {
     opacity: 1;
   }
   100% {
-    transform: scale(9);
-    opacity: 0;
-  }
-}
-@keyframes ride-cap {
-  0% {
-    opacity: 0;
-  }
-  20%,
-  70% {
-    opacity: 1;
-  }
-  100% {
+    transform: scale(16);
     opacity: 0;
   }
 }
 @keyframes ride-hall {
   from {
     opacity: 0;
-    transform: scale(1.15);
+    transform: scale(1.2);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Diamond wallpaper used behind creature grids and cards. */
+.bg-diamonds {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'%3E%3Cg fill='%232c2140'%3E%3Crect x='23' y='10' width='2' height='2'/%3E%3Crect x='21' y='12' width='6' height='2'/%3E%3Crect x='19' y='14' width='2' height='2'/%3E%3Crect x='27' y='14' width='2' height='2'/%3E%3Crect x='21' y='16' width='6' height='2'/%3E%3Crect x='23' y='18' width='2' height='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
 }
 
 /* Live hunt: wrapper walks between --x0 and --x1, zombies turn around at each end. */

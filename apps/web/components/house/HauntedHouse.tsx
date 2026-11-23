@@ -69,28 +69,35 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         </div>
       </header>
 
-      <section aria-label="Summary" className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(170px,1fr))]">
-        <div className="col-span-2 flex items-center gap-4 rounded-2xl border border-dust bg-crypt p-4">
+      <section aria-label="Summary" className="grid gap-3 lg:grid-cols-[1fr_1.45fr]">
+        <div className="flex items-center gap-6 rounded-2xl border border-dust bg-crypt p-6">
           <ScoreRing score={liveScore} />
           <div>
-            <div className="text-xs text-lantern">Haunting score</div>
-            <div className="text-xl font-bold">{scoreLabel(liveScore)}</div>
-            <div className="text-xs text-bone/60">
+            <div className="text-sm text-lantern">Haunting score</div>
+            <div className="text-2xl font-bold">{scoreLabel(liveScore)}</div>
+            <div className="text-sm text-bone/70">
               {result.commitsScanned} commits · {result.filesScanned} files · {(result.durationMs / 1000).toFixed(1)} s
               {result.partial && " · partial"}
             </div>
           </div>
         </div>
-        {KINDS.map((k) => (
-          <div key={k} className="rounded-2xl border border-dust bg-crypt p-4">
-            <div className="flex items-center gap-2 text-xs text-bone/70">
-              <Sprite kind={k} scale={0.18} paused />
-              {KIND_LABEL[k].many}
-            </div>
-            <div className="mt-2 text-3xl font-bold tabular-nums">{count(k)}</div>
-            <div className="text-xs text-bone/60">{KIND_LABEL[k].hint}</div>
-          </div>
-        ))}
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          {KINDS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setFilter(k)}
+              aria-label={`${count(k)} ${KIND_LABEL[k].many}: ${KIND_LABEL[k].meaning}. Show only these.`}
+              className="flex flex-col items-center justify-end gap-1 rounded-xl border border-dust bg-crypt px-2 pb-2 pt-3 hover:border-bone/40"
+            >
+              <span className="flex h-9 items-center">
+                <Sprite kind={k} scale={0.3} paused />
+              </span>
+              <span className="text-xl font-bold tabular-nums">{count(k)}</span>
+              <span className="text-[11px] text-bone/70">{KIND_LABEL[k].short}</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       {result.notes.length > 0 && (
@@ -101,35 +108,33 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         </ul>
       )}
 
-      <div className="mt-10 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold sm:text-3xl">
-            {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}
-          </h1>
-          <p className="text-sm text-bone/60">Hover a creature for the fix. Click it to pin it. Bigger creature, bigger risk.</p>
-        </div>
-        <div role="group" aria-label="Filter creatures" className="flex flex-wrap gap-2">
-          {(["all", ...KINDS] as Filter[]).map((k) => {
-            const n = k === "all" ? alive.length : count(k);
-            const label = k === "all" ? "All" : KIND_LABEL[k].many;
-            const on = filter === k;
-            return (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setFilter(k)}
-                className={`rounded-full border px-3.5 py-1.5 text-sm ${on ? "border-bone bg-bone text-plum-night" : "border-dust text-bone/80 hover:border-bone/50"}`}
-              >
-                {label} {n}
-              </button>
-            );
-          })}
-        </div>
+      <h1 className="mt-12 text-3xl font-bold">
+        {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}
+      </h1>
+      <div role="group" aria-label="Filter creatures" className="mt-4 flex flex-wrap gap-2">
+        {(["all", ...KINDS] as Filter[]).map((k) => {
+          const n = k === "all" ? alive.length : count(k);
+          const label = k === "all" ? "All" : KIND_LABEL[k].many;
+          const on = filter === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setFilter(k)}
+              className={`rounded-full border px-3.5 py-1.5 text-sm ${on ? "border-bone bg-bone text-plum-night" : "border-dust text-bone/80 hover:border-bone/50"}`}
+            >
+              {label} {n}
+            </button>
+          );
+        })}
       </div>
+      <p className="mt-3 text-sm text-bone/60">
+        {KINDS.length > 1 ? `${KINDS.length} kinds of creatures, one scan. ` : ""}Hover a creature for the fix. Click it to pin it. Bigger creature, bigger risk.
+      </p>
 
-      <div className="mt-5 grid items-start gap-4 lg:grid-cols-[1fr_340px]">
-        <div className="grid gap-3 rounded-2xl border border-dust/60 p-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1fr_380px]">
+        <div className="bg-diamonds grid gap-3 rounded-2xl border border-dust/60 p-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((f) => (
             <CreatureCard
               key={f.id}

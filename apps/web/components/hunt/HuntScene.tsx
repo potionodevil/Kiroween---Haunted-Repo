@@ -5,8 +5,9 @@ import type { CreatureKind, Finding } from "@haunted/core";
 import type { GateContext } from "@/components/ScanGate";
 import { useBanished } from "@/lib/client/useBanished";
 import { scanQuery } from "@/lib/client/session";
-import { sortFindings } from "@haunted/core";
-import { KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE, SPRITES } from "@/lib/sprites";
+import { CREATURE_KINDS, sortFindings } from "@haunted/core";
+import { Hallway } from "@/components/Hallway";
+import { FACES_RIGHT, KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
 import { accessibleName } from "@/components/house/CreatureCard";
 
@@ -107,20 +108,15 @@ export function HuntScene({ ctx }: { ctx: GateContext }) {
           <h1 className="text-2xl font-bold sm:text-3xl">Your repo is crawling with them</h1>
           <p className="text-sm text-bone/60">Hover a creature to freeze it and read the finding. Click to fix it and banish it.</p>
         </div>
-        <p className="text-xs text-bone/60">Ghost · secret &nbsp; Zombie · lint bug &nbsp; Bat · performance</p>
+        <p className="text-sm text-bone/70">{CREATURE_KINDS.length} kinds of creatures</p>
       </div>
 
       <div
-        className="hunt-scene relative mt-5 h-[460px] rounded-2xl border border-dust bg-crypt"
+        className="hunt-scene relative mt-5 aspect-[320/130] min-h-[380px] rounded-2xl border border-dust bg-crypt"
         style={{ "--speed": speed } as CSSProperties}
       >
-        {/* house interior: two floors, doors and a lit painting */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-          <div className="absolute inset-x-0 top-1/2 h-px bg-dust" />
-          <div className="absolute inset-x-0 bottom-0 top-1/2 bg-plum-night/45" />
-          <div className="absolute left-[8%] top-[10%] h-[30%] w-[9%] rounded-t-full border border-dust bg-plum-night" />
-          <div className="absolute right-[10%] top-[10%] h-[30%] w-[9%] rounded-t-full border border-dust bg-plum-night" />
-          <div className="absolute left-[46%] top-[12%] h-[20%] w-[8%] rounded border border-lantern/70 bg-[#3a2a14]" />
+          <Hallway className="size-full" />
         </div>
 
         {inScene.length === 0 ? (
@@ -150,16 +146,16 @@ export function HuntScene({ ctx }: { ctx: GateContext }) {
       )}
 
       <section className="mt-12">
-        <h2 className="font-semibold">Sprite sheets · 4 frames each</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          {(Object.entries(SPRITES) as [CreatureKind, NonNullable<(typeof SPRITES)[CreatureKind]>][]).map(([k, s]) => (
+        <h2 className="text-xl font-bold">The full bestiary, 4 frames each</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {CREATURE_KINDS.map((k) => (
             <div key={k} className="flex items-center gap-4 rounded-2xl border border-dust bg-crypt p-4">
-              <Sprite kind={k} scale={0.6} />
+              <span className="flex w-16 shrink-0 justify-center">
+                <Sprite kind={k} scale={0.55} />
+              </span>
               <div>
-                <div className="font-mono text-sm">{k}_sheet.png</div>
-                <div className="font-mono text-xs text-bone/60">
-                  {s.w} × {s.h} per frame · {k === "ghost" ? "float" : k === "zombie" ? "walk" : "flap"}
-                </div>
+                <div className="font-bold">{KIND_LABEL[k].one}</div>
+                <div className="text-sm text-bone/70">{KIND_LABEL[k].meaning}</div>
               </div>
             </div>
           ))}
@@ -186,8 +182,8 @@ function Creature({
 }) {
   const air = AIR.has(f.kind);
   const vertical: CSSProperties = air
-    ? { top: p.floor === 0 ? "6%" : "56%" }
-    : { bottom: p.floor === 0 ? "51%" : "3%" };
+    ? { top: p.floor === 0 ? "8%" : "22%" }
+    : { bottom: p.floor === 0 ? "37%" : "9%" };
   const tooltipBelow = air || p.floor === 0;
   const style = {
     ...vertical,
@@ -213,7 +209,7 @@ function Creature({
         className={`relative block rounded-lg p-1 ${vanishing ? "hunt-vanish" : ""} ${frozen ? "ring-2 ring-lantern" : ""}`}
       >
         <span
-          className={f.kind === "zombie" ? "hunt-flip inline-block" : "inline-block"}
+          className={FACES_RIGHT.has(f.kind) ? "hunt-flip inline-block" : "inline-block"}
           style={{ animationPlayState: playState }}
         >
           <Sprite kind={f.kind} scale={0.7 * SEVERITY_SCALE[f.severity]} paused={frozen || vanishing} />

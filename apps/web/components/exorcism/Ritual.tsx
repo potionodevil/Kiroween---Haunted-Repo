@@ -87,8 +87,8 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
         <span className="font-display text-2xl">Haunted Repo</span>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
-        <aside className="space-y-6">
+      <div className="grid items-start gap-8 lg:grid-cols-[360px_1fr]">
+        <aside className="space-y-10">
           <GhostCard f={ghost} laid={laid} reveal={demo} />
           <Timeline f={ghost} />
         </aside>
@@ -170,47 +170,63 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
 }
 
 function GhostCard({ f, laid, reveal }: { f: Finding; laid: boolean; reveal: boolean }) {
+  const hot = f.severity === "critical" && !laid;
   return (
-    <div className={`rounded-2xl border p-5 text-center ${f.severity === "critical" && !laid ? "border-lantern/70 bg-lantern/12" : "border-dust bg-crypt"}`}>
-      <div className={`flex h-32 items-center justify-center ${laid ? "opacity-35 grayscale" : ""}`}>
-        <Sprite kind="ghost" scale={1} paused={laid} />
-      </div>
-      <div className="mt-2">
-        <SeverityBadge severity={f.severity} fixed={laid} />
-      </div>
-      <h2 className="mt-2 text-xl font-bold">{f.title}</h2>
-      <p className="sr-only">{SEVERITY_LABEL[f.severity]} ghost</p>
-      <div className="mt-3 rounded-lg bg-plum-night px-3 py-2 font-mono text-xs text-bone/80" aria-label="Masked secret">
-        {reveal && f.masked ? f.masked : "Value hidden until you prove you own this repo"}
+    <div className={`rounded-2xl p-1.5 ${hot ? "border-2 border-lantern/80" : "border border-dust"}`}>
+      <div className={`bg-diamonds rounded-xl px-6 pb-8 pt-10 text-center ${hot ? "border border-lantern/50" : ""}`}>
+        <div className={`flex h-36 items-center justify-center ${laid ? "opacity-35 grayscale" : ""}`}>
+          <Sprite kind="ghost" scale={1.3} paused={laid} />
+        </div>
+        <div className="mt-6">
+          {laid ? (
+            <SeverityBadge severity={f.severity} fixed />
+          ) : (
+            <span className={`inline-block rounded-full px-3 py-0.5 text-xs font-semibold ${hot ? "bg-lantern text-plum-night" : "bg-dust text-bone"}`}>
+              {SEVERITY_LABEL[f.severity]} ghost
+            </span>
+          )}
+        </div>
+        <h2 className="mt-3 text-3xl font-bold">{f.title}</h2>
+        <div className="mx-auto mt-4 max-w-xs rounded-lg border border-dust bg-plum-night px-3 py-2.5 font-mono text-sm text-bone/85" aria-label="Masked secret">
+          {reveal && f.masked ? f.masked : "Value hidden until you prove you own this repo"}
+        </div>
       </div>
     </div>
+  );
+}
+
+function Step({ dot, title, sub }: { dot: "gold" | "dust"; title: string; sub: string }) {
+  return (
+    <li className="relative">
+      <span className={`absolute -left-[22px] top-1.5 size-3 rounded-full ${dot === "gold" ? "bg-lantern" : "bg-dust"}`} aria-hidden="true" />
+      <div className="font-bold">{title}</div>
+      <div className="font-mono text-xs text-bone/65">{sub}</div>
+    </li>
   );
 }
 
 function Timeline({ f }: { f: Finding }) {
   const g = f.ghost;
   if (!g) return null;
+  const still = `Still readable in ${g.commitCount} commit${g.commitCount === 1 ? "" : "s"}`;
   return (
     <div>
-      <h3 className="text-sm font-semibold">Where it lives</h3>
-      <ol className="mt-3 space-y-4 border-l border-dust pl-4">
-        <li className="relative">
-          <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-lantern" aria-hidden="true" />
-          <div className="text-sm font-semibold">Born on {fmtDate(g.firstSeen.date)}</div>
-          <div className="font-mono text-xs text-bone/60">{g.firstSeen.commit} · {g.firstSeen.file}:{g.firstSeen.line}</div>
-        </li>
+      <h3 className="text-xl font-bold">Where it lives</h3>
+      <ol className="mt-4 space-y-5 border-l border-dust pl-5">
+        <Step dot="gold" title={`Born on ${fmtDate(g.firstSeen.date)}`} sub={`${g.firstSeen.commit} · ${g.firstSeen.file}:${g.firstSeen.line}`} />
         {g.copies.map((c) => (
-          <li key={`${c.commit}-${c.file}`} className="relative">
-            <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-dust" aria-hidden="true" />
-            <div className="text-sm font-semibold">Copied</div>
-            <div className="font-mono text-xs text-bone/60">{c.commit} · {c.file}</div>
-          </li>
+          <Step
+            key={`${c.commit}-${c.file}`}
+            dot="dust"
+            title={c.date ? `Copied on ${fmtDate(c.date)}` : "Copied"}
+            sub={`${c.commit} · ${c.file}`}
+          />
         ))}
-        <li className="relative">
-          <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-dust" aria-hidden="true" />
-          <div className="text-sm font-semibold">Still readable</div>
-          <div className="text-xs text-bone/60">in {g.commitCount} commit{g.commitCount === 1 ? "" : "s"}</div>
-        </li>
+        {g.deletedAt || g.deletedAtHead ? (
+          <Step dot="dust" title={g.deletedAt ? `File deleted on ${fmtDate(g.deletedAt)}` : "File deleted"} sub={still} />
+        ) : (
+          <Step dot="dust" title="Still in the code" sub={still} />
+        )}
       </ol>
     </div>
   );

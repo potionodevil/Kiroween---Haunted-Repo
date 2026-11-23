@@ -17,7 +17,8 @@ const raw: Omit<Finding, "id">[] = [
     autoFixable: false, masked: "sk_live_••••••••••••4f2a", evidence: ["README.md@9c1d8e4"],
     ghost: {
       firstSeen: { commit: "a3f91c2", date: "2026-03-14T10:21:00Z", file: "config/payments.js", line: 12 },
-      copies: [{ commit: "9c1d8e4", file: "README.md" }], commitCount: 47, deletedAtHead: true,
+      copies: [{ commit: "9c1d8e4", file: "README.md example", date: "2026-04-02T09:00:00Z" }],
+      commitCount: 47, deletedAtHead: true, deletedAt: "2026-06-20T15:30:00Z",
     },
   },
   {
