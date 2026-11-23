@@ -4,48 +4,41 @@ inclusion: always
 
 # Product: Haunted Repo
 
-Haunted Repo scans a public GitHub repository and shows every problem as a creature.
+Haunted Repo is a security and code health platform with a haunted house as its interface. It scans a GitHub repository, its history and its dependencies, and shows every problem as a creature. It explains each creature in plain language, fixes what can be fixed, and guards the repo from then on: in the editor through a Kiro Power, on the developer's machine through a watcher, and on GitHub through a pull request guardian. At the end the user exports an audit report.
 
-| Creature | Meaning | Source | Color |
-|---|---|---|---|
-| Ghost | Leaked secret in git history | Own regex rules + Shannon entropy | Bone white `#F3ECDD` |
-| Zombie | Bug / lint error | ESLint at HEAD | Zombie green `#9FD6A8` |
-| Bat | Performance problem | Own AST rules | Ghost teal `#7FD6C9` |
+## Creatures
 
-## Language rules (UI copy)
+| Creature | Finds | Sprite |
+|---|---|---|
+| Ghost | Secrets in current files and the last 300 commits | done |
+| Vampire | Dependencies with known vulnerabilities (OSV.dev) | todo |
+| Spider | Insecure code patterns (eval, innerHTML, SQL concat, …) | todo |
+| Poltergeist | Unsafe CI and repo setup | todo |
+| Zombie | Bugs (ESLint) | done |
+| Bat | Performance problems | done |
+| Skeleton | Architecture and stack-fit problems | todo |
+| Mummy | Missing, outdated or weak documentation | todo |
+| Possessed | Risks from AI agents and LLM code | todo |
+| Banshee | Failures when the code actually runs (sandbox) | todo |
+
+Severity: `critical`, `warning`, `low`. Findings carry a CWE id and an OWASP Top 10 category where one applies.
+
+## Language rules
 
 - Findings are "creatures". A repo "is haunted". Fixing is "banishing" or "laying to rest".
-- Secrets are never "fixed" automatically. They are "exorcised" through the ritual.
-- The score is the "Haunting score", 0 to 100. Lower is better. 0 = "The house is quiet".
-- Tone: playful in headlines, precise and plain in explanations and fix text.
-  A developer must understand the real risk in one read.
-- UI copy is English. Code comments are English.
-
-## Screens
-
-1. Landing page with scroll-driven camera ride through the front door.
-2. Scan result: "the haunted house" (score, counters, filters, creature grid, detail panel).
-3. Exorcism ritual for one secret (timeline, 4-step checklist, rescan).
-4. Live hunt: creatures walk as sprites, hover freezes, click banishes.
+- Secrets are never auto-fixed; they are "exorcised" through the ritual.
+- The Haunting score runs 0 to 100, lower is better. 0 = "The house is quiet".
+- Playful headlines, plain and specific explanations. A developer understands the real risk in one read.
+- Buttons say what happens: "Scan my repo", "Fix it now", "Banish token", "Export autopsy report".
+- UI copy and code comments are English.
 
 ## Design rules
 
-- Creature size shows severity: critical 100 %, warning 80 %, low 60 %.
-- Gold `#F2B544` is reserved for actions and critical findings. Nothing else.
-- All motion stops under `prefers-reduced-motion: reduce`.
-- Every creature is a real `<button>`, reachable by keyboard, with full screen-reader text
-  (kind, severity, title, file, line).
-- Text contrast is at least 4.5:1 on every surface.
-- Fonts: Pirata One (display), Bricolage Grotesque (text), JetBrains Mono (code, paths, hashes only).
-
-## Palette
-
-| Token | Hex | Use |
-|---|---|---|
-| plum-night | `#160E22` | Background |
-| crypt | `#22172F` | Surfaces |
-| dust | `#45345E` | Lines |
-| bone | `#F3ECDD` | Text, ghosts |
-| lantern | `#F2B544` | Actions, critical |
-| teal | `#7FD6C9` | Bats |
-| zombie | `#9FD6A8` | Zombies |
+- Palette: plum night `#160E22` (background), crypt `#22172F` (surfaces), dust `#45345E` (lines), bone `#F3ECDD` (text, ghosts), lantern gold `#F2B544` (actions and critical only), spectral teal `#7FD6C9` (bats), zombie green `#9FD6A8` (zombies).
+- Type: Pirata One display, Bricolage Grotesque text, JetBrains Mono only for code, paths and hashes.
+- Creatures are 4-frame pixel sprite sheets animated with CSS `steps(4)`. Size shows severity: 100 %, 80 %, 60 %.
+- One big motion moment per page. Everything else stays calm.
+- Every creature is a real `<button>` with a full screen-reader label (kind, severity, title, location).
+- All motion stops under `prefers-reduced-motion`.
+- Text contrast at least 4.5:1. Lighthouse accessibility at least 95.
+- Every headline feature is reachable in a few clicks from the landing page (3-minute demo video).

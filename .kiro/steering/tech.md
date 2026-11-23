@@ -4,56 +4,65 @@ inclusion: always
 
 # Tech stack and conventions
 
-## Stack
+## Layout (target, pnpm workspaces)
 
-| Part | Choice |
-|---|---|
-| Framework | Next.js (App Router), TypeScript, Tailwind CSS |
-| Scan API | Next.js Route Handler `app/api/scan/route.ts`, Node runtime |
-| Secrets | Own regex rules + Shannon entropy in `lib/scanner/secrets/` (no dependency) |
-| Linter | ESLint Node API with a fixed flat config in `lib/scanner/zombies/` |
-| Performance | Own AST rules with `@typescript-eslint/parser` in `lib/scanner/bats/` |
-| Sprites | PNG sheets in `public/sprites/`, animated with CSS `steps(4)` |
-| 3D scroll | CSS `view-timeline` + `perspective`, no animation library |
-| Tests | Vitest + fast-check (property-based) |
-| Hosting | Vercel |
+```
+apps/web          Next.js App Router, Tailwind, Vercel
+packages/core     scanners, finding format, score, masking (pure TS, no I/O)
+packages/github   GitHub REST client, rate limits, revocation call
+packages/cli      watcher, pre-commit hook, local scan
+packages/mcp      MCP server wrapping core
+packages/sandbox  Vercel Sandbox runner, output parsers for test, build and crash logs
+power/            Kiro Power: POWER.md, mcp.json, steering/
+```
+
+Current state: one Next.js app at the repo root. Moving to this layout is task 1 of `scanner-core`.
 
 ## Rules
 
-- TypeScript `strict: true`. No `any` without a comment that explains why.
-- All scanner code is pure and framework-free: input text in, `Finding[]` out.
-  Network calls live only in `lib/github/`.
-- Every rule has a unit test with one positive and one negative example,
-  plus a fast-check property that it never throws on random input.
-- One shared `Finding` type in `lib/types.ts`. UI never invents its own shape.
-- Limits per scan: max 300 commits, max 200 JS/TS files at HEAD.
-- `GITHUB_TOKEN` comes only from `process.env`. Never from the client.
-- No client-side calls to the GitHub API.
-- Prefer server components. Client components only for interaction (filters, panel, hunt).
+- TypeScript `strict: true` and `noUncheckedIndexedAccess`. No `any` without a comment saying why.
+- `packages/core` has no network or file access. Input text in, `Finding[]` out. Fully unit and property testable.
+- Network lives only in `packages/github` (and OSV calls in the web app's scan route).
+- AST parsing with `@typescript-eslint/parser`; ESLint Node API for zombies.
+- Tests: Vitest + fast-check. Every rule has one positive and one negative example and is part of the "never throws on random input" property.
+- One shared `Finding` type in `packages/core`. UI, report, CLI, MCP server and PR guardian only consume this shape.
+- Scan limits: 300 commits, 200 JS/TS files, 60 seconds. Partial results carry `partial: true` and a note.
+- Prefer server components. Client components only for interaction.
 
 ## Finding format
 
 ```ts
-export type CreatureKind = "ghost" | "zombie" | "bat";
-export type Severity = "critical" | "warning" | "low";
+type CreatureKind = 'ghost' | 'vampire' | 'spider' | 'poltergeist' | 'zombie'
+  | 'bat' | 'skeleton' | 'mummy' | 'possessed' | 'banshee';
 
-export interface Finding {
-  id: string;            // "f_<commit7>_<n>"
+type Finding = {
+  id: string;                 // stable hash, see scanner-core design
   kind: CreatureKind;
-  severity: Severity;
-  rule: string;          // "secret/aws-access-key"
+  severity: 'critical' | 'warning' | 'low';
+  rule: string;               // "secret/aws-access-key", "osv/GHSA-xxxx", "spider/sql-concat"
+  cwe?: string;               // "CWE-798"
+  owasp?: string;             // "A07:2021"
   title: string;
   file: string;
-  line: number;
-  commit: string | null; // 7-char sha, null for HEAD-only findings
+  line?: number;
+  commit?: string;
+  introducedAt?: string;
+  fixedAt?: string;
   message: string;
   fix: string;
+  blastRadius?: string;
   autoFixable: boolean;
-  patch: string | null;  // unified diff
-  secretPreview?: string; // masked, max 4 visible chars
-}
+  patch?: string;
+  references?: string[];
+  masked?: string;
+  dependencyPath?: string[];
+  minimalUpgrade?: string;
+  proofTest?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  evidence?: string[];
+};
 ```
 
 ## Commands
 
-- `npm run dev` · `npm test` · `npm run lint` · `npm run build`
+`pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build`
