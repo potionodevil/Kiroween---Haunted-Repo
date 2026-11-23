@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+@theme {
+  --color-plum-night: #160e22;
+  --color-crypt: #22172f;
+  --color-dust: #45345e;
+  --color-bone: #f3ecdd;
+  --color-lantern: #f2b544;
+  --color-teal: #7fd6c9;
+  --color-zombie: #9fd6a8;
+
+  --font-display: var(--ff-display), "Pirata One", serif;
+  --font-sans: var(--ff-text), "Bricolage Grotesque", system-ui, sans-serif;
+  --font-mono: var(--ff-mono), "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-plum-night);
+  color: var(--color-bone);
+}
+
+body {
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lantern);
+  outline-offset: 2px;
+}
+
+.sprite {
+  display: inline-block;
+  width: var(--fw);
+  height: var(--fh);
+  background-image: var(--sheet);
+  background-repeat: no-repeat;
+  background-size: calc(var(--fw) * 4) var(--fh);
+  image-rendering: pixelated;
+  animation: sprite-frames var(--dur, 0.8s) steps(4) infinite;
+}
+
+.sprite-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed;
+  border-radius: 28% 28% 12% 12%;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  line-height: 1;
+  animation: placeholder-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes placeholder-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes sprite-frames {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(var(--fw) * -4) 0;
+  }
+}
+
+/* ---------- Landing: the hero is the first frame of the camera ride ----------
+   Fallback (no animation-timeline or reduced motion): a static hero, no ride. */
+.ride-stage {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+}
+.ride-scene {
+  position: absolute;
+  inset: 0;
+  /* scene px -> screen px for preserveAspectRatio="xMidYMax slice" on a 320x200 grid */
+  --s: max(calc(100vw / 320), calc(100svh / 200));
+  /* door center is 60 px right of the scene center and 48.5 px above its bottom */
+  transform-origin: calc(50% + 60 * var(--s)) calc(100% - 48.5 * var(--s));
+}
+.ride-hall {
+  display: none;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ride {
+      height: 260svh;
+      view-timeline: --ride block;
+    }
+    .ride-stage {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+    }
+    .ride-copy {
+      animation: ride-fade linear both;
+      animation-timeline: --ride;
+      animation-range: contain 0% contain 16%;
+    }
+    .ride-scene {
+      animation: ride-cam ease-in both;
+      animation-timeline: --ride;
+      animation-range: contain 8% contain 58%;
+    }
+    .ride-hall {
+      display: block;
+      position: absolute;
+      inset: 0;
+      animation: ride-hall linear both;
+      animation-timeline: --ride;
+      animation-range: contain 50% contain 72%;
+    }
+  }
+}
+
+@keyframes ride-fade {
+  to {
+    opacity: 0;
+    transform: translateY(-40px);
+    visibility: hidden;
+  }
+}
+@keyframes ride-cam {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(16);
+    opacity: 0;
+  }
+}
+@keyframes ride-hall {
+  from {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Diamond wallpaper used behind creature grids and cards. */
+.bg-diamonds {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'%3E%3Cg fill='%232c2140'%3E%3Crect x='23' y='10' width='2' height='2'/%3E%3Crect x='21' y='12' width='6' height='2'/%3E%3Crect x='19' y='14' width='2' height='2'/%3E%3Crect x='27' y='14' width='2' height='2'/%3E%3Crect x='21' y='16' width='6' height='2'/%3E%3Crect x='23' y='18' width='2' height='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+
+/* Live hunt: wrapper walks between --x0 and --x1, zombies turn around at each end. */
+.hunt-mover {
+  animation: hunt-move var(--d, 10s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes hunt-move {
+  from {
+    left: var(--x0);
+  }
+  to {
+    left: var(--x1);
+  }
+}
+
+.hunt-flip {
+  animation: hunt-flip calc(var(--d, 10s) * 2) step-end var(--delay, 0s) infinite;
+}
+
+@keyframes hunt-flip {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+}
+
+.hunt-vanish {
+  animation: hunt-vanish 0.45s ease-in forwards;
+}
+
+@keyframes hunt-vanish {
+  to {
+    opacity: 0;
+    transform: translateY(-24px) scale(1.4);
+    filter: brightness(2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hunt-mover,
+  .hunt-flip {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
