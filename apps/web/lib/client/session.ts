@@ -25,7 +25,11 @@ function write(key: string, value: unknown) {
   }
 }
 
-export const loadResult = (repo: string) => read<ScanResult>(resultKey(repo));
+/** Returns a cached scan only if it has the current format (v2 adds `notes`). */
+export const loadResult = (repo: string) => {
+  const r = read<ScanResult>(resultKey(repo));
+  return r && Array.isArray(r.notes) && Array.isArray(r.findings) ? r : null;
+};
 export const saveResult = (r: ScanResult) => write(resultKey(r.repo), r);
 
 export const loadBanished = (repo: string) => new Set(read<string[]>(banishedKey(repo)) ?? []);

@@ -5,7 +5,7 @@ import { score, scoreLabel } from "./score";
 
 const f = (id: string, severity: Severity): Finding => ({
   id, severity, kind: "zombie", rule: "r", title: "t", file: "a.ts", line: 1,
-  commit: null, message: "", fix: "", autoFixable: false, patch: null,
+  message: "m", fix: "f", autoFixable: false,
 });
 
 describe("score", () => {

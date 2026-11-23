@@ -23,7 +23,7 @@ describe("ritual templates", () => {
     for (const ghost of collectGhosts(scanText(line, { file: "a.ts", commit: "abc1234", date: null }))) {
       const text = JSON.stringify(buildRitual(ghost));
       for (const raw of Object.values(FAKE)) expect(text).not.toContain(raw);
-      expect(text).not.toContain(ghost.secretPreview!);
+      expect(text).not.toContain(ghost.masked!);
     }
   });
 });

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function accessibleName(f: Finding, banished: boolean): string {
-  const where = f.commit ? `${f.file}, commit ${f.commit}` : `${f.file}, line ${f.line}`;
+  const where = f.commit ? `${f.file}, commit ${f.commit}` : f.line ? `${f.file}, line ${f.line}` : f.file;
   const state = banished ? " (banished)" : "";
   return `${SEVERITY_LABEL[f.severity]} ${KIND_LABEL[f.kind].one.toLowerCase()}: ${f.title} in ${where}${state}`;
 }
@@ -41,7 +41,7 @@ export function CreatureCard({ finding: f, banished, pinned, onHover, onPin }: P
       <span className={`mt-auto ${banished ? "opacity-50" : ""}`}>
         <span className="block font-semibold">{f.title}</span>
         <span className="mt-0.5 block truncate font-mono text-xs text-bone/60">
-          {f.commit ? `${f.file} · ${f.commit}` : `${f.file}:${f.line}`}
+          {f.commit ? `${f.file} · ${f.commit}` : f.line ? `${f.file}:${f.line}` : f.file}
         </span>
       </span>
       <span className="mt-3">

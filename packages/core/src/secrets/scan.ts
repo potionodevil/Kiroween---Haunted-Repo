@@ -3,6 +3,8 @@ import type { Finding, Severity } from "../types";
 import { shannonEntropy } from "./entropy";
 import { mask } from "./mask";
 import { SECRET_RULES, isPlaceholder, looksLikeSample, type SecretRule } from "./rules";
+import { blastRadiusFor } from "./blast-radius";
+import { stableId } from "../id";
 
 export const ENTROPY_MIN = 4.0;
 export const ENTROPY_MIN_LENGTH = 20;
@@ -120,40 +122,66 @@ export function scanPatch(patch: string, ctx: LineContext): SecretHit[] {
  * Merges hits of the same secret into one ghost finding.
  * Hits must be ordered newest commit first (GitHub API order); the oldest becomes firstSeen.
  */
-export function collectGhosts(hits: SecretHit[]): Finding[] {
+/** Commit label for hits found in the current files. */
+export const HEAD = "HEAD";
+
+/**
+ * `hits` come from history (newest commit first). `headHits` come from current files;
+ * when given, ghosts missing from HEAD are marked "deleted, still in history".
+ */
+export function collectGhosts(hits: SecretHit[], headHits?: SecretHit[]): Finding[] {
   const groups = new Map<string, SecretHit[]>();
   for (const h of hits) {
     const g = groups.get(h.hash);
     if (g) g.push(h);
     else groups.set(h.hash, [h]);
   }
+  const atHead = new Map<string, SecretHit>();
+  for (const h of headHits ?? []) {
+    if (!atHead.has(h.hash)) atHead.set(h.hash, h);
+    if (!groups.has(h.hash)) groups.set(h.hash, [h]);
+  }
+
   const findings: Finding[] = [];
   for (const [hash, group] of groups) {
     const first = group[group.length - 1]!;
-    const commits = new Set(group.map((h) => h.commit));
+    const commits = new Set(group.filter((h) => h.commit !== HEAD).map((h) => h.commit));
     const copies = group
       .slice(0, -1)
       .reverse()
       .filter((h) => h.commit !== first.commit || h.file !== first.file)
       .map((h) => ({ commit: h.commit, file: h.file }));
+    const head = atHead.get(hash);
+    if (head && head.file !== first.file && !copies.some((c) => c.file === head.file)) {
+      copies.push({ commit: HEAD, file: head.file });
+    }
+    const deletedAtHead = headHits ? !head : undefined;
+    const message = deletedAtHead
+      ? `${first.rule.message} The file no longer has it, but it is still in history.`
+      : first.rule.message;
     findings.push({
-      id: `g_${hash.slice(0, 10)}`,
+      id: stableId("ghost", [first.rule.id, hash]),
       kind: "ghost",
       severity: first.severity,
       rule: first.rule.id,
+      cwe: "CWE-798",
+      owasp: "A07:2021",
       title: first.rule.title,
       file: first.file,
       line: first.line,
-      commit: first.commit,
-      message: first.rule.message,
+      commit: first.commit === HEAD ? undefined : first.commit,
+      introducedAt: first.date ?? undefined,
+      message,
       fix: first.rule.fix,
+      blastRadius: blastRadiusFor(first.rule.id),
       autoFixable: false,
-      patch: null,
-      secretPreview: first.preview,
+      masked: first.preview,
+      evidence: copies.map((c) => `${c.file}@${c.commit}`),
       ghost: {
         firstSeen: { commit: first.commit, date: first.date, file: first.file, line: first.line },
         copies,
-        commitCount: commits.size,
+        commitCount: Math.max(commits.size, 1),
+        deletedAtHead,
       },
     });
   }

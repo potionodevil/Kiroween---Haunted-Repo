@@ -1,4 +1,4 @@
-import type { Finding, Severity } from "./types";
+import { CREATURE_KINDS, type Finding, type Severity } from "./types";
 
 export const SEVERITY_WEIGHT: Record<Severity, number> = { critical: 20, warning: 8, low: 3 };
 
@@ -17,14 +17,13 @@ export function scoreLabel(s: number): string {
 
 const ORDER: Record<Severity, number> = { critical: 0, warning: 1, low: 2 };
 
-/** Critical first, then ghosts before zombies before bats, then file path. */
+/** Critical first, then creature order of CREATURE_KINDS, then file path and line. */
 export function sortFindings(findings: Finding[]): Finding[] {
-  const kindOrder = { ghost: 0, zombie: 1, bat: 2 } as const;
   return [...findings].sort(
     (a, b) =>
       ORDER[a.severity] - ORDER[b.severity] ||
-      kindOrder[a.kind] - kindOrder[b.kind] ||
+      CREATURE_KINDS.indexOf(a.kind) - CREATURE_KINDS.indexOf(b.kind) ||
       a.file.localeCompare(b.file) ||
-      a.line - b.line,
+      (a.line ?? 0) - (b.line ?? 0),
   );
 }

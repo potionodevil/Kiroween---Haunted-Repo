@@ -40,6 +40,23 @@ body {
   animation: sprite-frames var(--dur, 0.8s) steps(4) infinite;
 }
 
+.sprite-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed;
+  border-radius: 28% 28% 12% 12%;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  line-height: 1;
+  animation: placeholder-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes placeholder-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes sprite-frames {
   from {
     background-position: 0 0;

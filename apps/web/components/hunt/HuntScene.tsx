@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
-import type { Finding } from "@haunted/core";
+import type { CreatureKind, Finding } from "@haunted/core";
 import type { GateContext } from "@/components/ScanGate";
 import { useBanished } from "@/lib/client/useBanished";
 import { scanQuery } from "@/lib/client/session";
@@ -16,7 +16,12 @@ const SPEEDS = [
   { label: "Normal", value: 1 },
   { label: "Fast", value: 1.7 },
 ] as const;
-const BASE_SECONDS = { zombie: 14, ghost: 10, bat: 7 } as const;
+const BASE_SECONDS: Record<CreatureKind, number> = {
+  ghost: 10, vampire: 9, spider: 12, poltergeist: 8, zombie: 14,
+  bat: 7, skeleton: 15, mummy: 16, possessed: 9, banshee: 8,
+};
+/** Flying kinds use the air lane; the rest walk on the floor. */
+const AIR = new Set<CreatureKind>(["bat", "possessed", "banshee"]);
 
 interface Placement {
   floor: 0 | 1;
@@ -147,13 +152,13 @@ export function HuntScene({ ctx }: { ctx: GateContext }) {
       <section className="mt-12">
         <h2 className="font-semibold">Sprite sheets · 4 frames each</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          {(["ghost", "zombie", "bat"] as const).map((k) => (
+          {(Object.entries(SPRITES) as [CreatureKind, NonNullable<(typeof SPRITES)[CreatureKind]>][]).map(([k, s]) => (
             <div key={k} className="flex items-center gap-4 rounded-2xl border border-dust bg-crypt p-4">
               <Sprite kind={k} scale={0.6} />
               <div>
                 <div className="font-mono text-sm">{k}_sheet.png</div>
                 <div className="font-mono text-xs text-bone/60">
-                  {SPRITES[k].w} × {SPRITES[k].h} per frame · {k === "ghost" ? "float" : k === "zombie" ? "walk" : "flap"}
+                  {s.w} × {s.h} per frame · {k === "ghost" ? "float" : k === "zombie" ? "walk" : "flap"}
                 </div>
               </div>
             </div>
@@ -179,7 +184,7 @@ function Creature({
   onFreeze: (id: string | null) => void;
   onHit: (f: Finding) => void;
 }) {
-  const air = f.kind === "bat";
+  const air = AIR.has(f.kind);
   const vertical: CSSProperties = air
     ? { top: p.floor === 0 ? "6%" : "56%" }
     : { bottom: p.floor === 0 ? "51%" : "3%" };
@@ -227,7 +232,7 @@ function Creature({
             <span className="truncate font-mono text-bone/55">{f.rule}</span>
           </div>
           <div className="mt-1.5 font-semibold">{f.title}</div>
-          <div className="font-mono text-[11px] text-bone/60">{f.file}:{f.line}</div>
+          <div className="font-mono text-[11px] text-bone/60">{f.line ? `${f.file}:${f.line}` : f.file}</div>
           <div className="mt-1.5 text-xs text-bone/80">{f.fix}</div>
           <div className="mt-2 text-[11px] text-lantern">Click to banish</div>
         </div>

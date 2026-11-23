@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import type { CreatureKind, Finding, ScanResult } from "@haunted/core";
+import { CREATURE_KINDS, type CreatureKind, type Finding, type ScanResult } from "@haunted/core";
 import { useBanished } from "@/lib/client/useBanished";
 import { scanQuery } from "@/lib/client/session";
 import { score as calcScore, scoreLabel } from "@haunted/core";
@@ -14,12 +14,6 @@ import { DetailPanel } from "./DetailPanel";
 import { CopyButton } from "./CopyButton";
 
 type Filter = "all" | CreatureKind;
-const KINDS: CreatureKind[] = ["ghost", "zombie", "bat"];
-const COUNTER_HINT: Record<CreatureKind, string> = {
-  ghost: "keys and tokens in history",
-  zombie: "linter errors and broken code",
-  bat: "slow loops, heavy bundles, leaks",
-};
 
 export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boolean }) {
   const { findings } = result;
@@ -31,6 +25,8 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const dialogRef = useRef<HTMLDialogElement>(null);
   const q = scanQuery(result.repo, demo);
 
+  /** Only kinds that appear in this scan get a counter and a filter chip. */
+  const KINDS = useMemo(() => CREATURE_KINDS.filter((k) => findings.some((f) => f.kind === k)), [findings]);
   const alive = useMemo(() => findings.filter((f) => !banished.has(f.id)), [findings, banished]);
   const count = (k: CreatureKind) => alive.filter((f) => f.kind === k).length;
   const autoFixable = alive.filter((f) => f.autoFixable && f.kind !== "ghost" && f.patch);
@@ -73,8 +69,8 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         </div>
       </header>
 
-      <section aria-label="Summary" className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div className="flex items-center gap-4 rounded-2xl border border-dust bg-crypt p-4">
+      <section aria-label="Summary" className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(170px,1fr))]">
+        <div className="col-span-2 flex items-center gap-4 rounded-2xl border border-dust bg-crypt p-4">
           <ScoreRing score={liveScore} />
           <div>
             <div className="text-xs text-lantern">Haunting score</div>
@@ -89,13 +85,21 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           <div key={k} className="rounded-2xl border border-dust bg-crypt p-4">
             <div className="flex items-center gap-2 text-xs text-bone/70">
               <Sprite kind={k} scale={0.18} paused />
-              {KIND_LABEL[k].many}, {KIND_LABEL[k].meaning}s
+              {KIND_LABEL[k].many}
             </div>
             <div className="mt-2 text-3xl font-bold tabular-nums">{count(k)}</div>
-            <div className="text-xs text-bone/60">{COUNTER_HINT[k]}</div>
+            <div className="text-xs text-bone/60">{KIND_LABEL[k].hint}</div>
           </div>
         ))}
       </section>
+
+      {result.notes.length > 0 && (
+        <ul className="mt-3 space-y-1 rounded-xl border border-dust/70 px-4 py-3 text-sm text-bone/75">
+          {result.notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      )}
 
       <div className="mt-10 flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -144,6 +148,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             banished={active ? banished.has(active.id) : false}
             onBanish={onBanish}
             ritualHref={active ? `/exorcism/${active.id}?${q}` : "#"}
+            revealMasked={demo}
           />
         </div>
       </div>

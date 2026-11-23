@@ -132,7 +132,7 @@ describe("collectGhosts", () => {
     const ghosts = collectGhosts([...newer, ...older]);
     expect(ghosts).toHaveLength(1);
     const g = ghosts[0]!;
-    expect(g.id).toMatch(/^g_[0-9a-f]{10}$/);
+    expect(g.id).toMatch(/^g_[0-9a-f]{12}$/);
     expect(g.commit).toBe("a3f91c2");
     expect(g.ghost?.commitCount).toBe(2);
     expect(g.ghost?.copies).toEqual([{ commit: "9c1d8e4", file: "README.md" }]);

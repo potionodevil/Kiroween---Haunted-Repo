@@ -89,7 +89,7 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
 
       <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
         <aside className="space-y-6">
-          <GhostCard f={ghost} laid={laid} />
+          <GhostCard f={ghost} laid={laid} reveal={demo} />
           <Timeline f={ghost} />
         </aside>
 
@@ -169,7 +169,7 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
   );
 }
 
-function GhostCard({ f, laid }: { f: Finding; laid: boolean }) {
+function GhostCard({ f, laid, reveal }: { f: Finding; laid: boolean; reveal: boolean }) {
   return (
     <div className={`rounded-2xl border p-5 text-center ${f.severity === "critical" && !laid ? "border-lantern/70 bg-lantern/12" : "border-dust bg-crypt"}`}>
       <div className={`flex h-32 items-center justify-center ${laid ? "opacity-35 grayscale" : ""}`}>
@@ -180,11 +180,9 @@ function GhostCard({ f, laid }: { f: Finding; laid: boolean }) {
       </div>
       <h2 className="mt-2 text-xl font-bold">{f.title}</h2>
       <p className="sr-only">{SEVERITY_LABEL[f.severity]} ghost</p>
-      {f.secretPreview && (
-        <div className="mt-3 rounded-lg bg-plum-night px-3 py-2 font-mono text-xs text-bone/80" aria-label="Masked secret">
-          {f.secretPreview}
-        </div>
-      )}
+      <div className="mt-3 rounded-lg bg-plum-night px-3 py-2 font-mono text-xs text-bone/80" aria-label="Masked secret">
+        {reveal && f.masked ? f.masked : "Value hidden until you prove you own this repo"}
+      </div>
     </div>
   );
 }
