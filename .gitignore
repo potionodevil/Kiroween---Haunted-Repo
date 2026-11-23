@@ -18,3 +18,7 @@ tools/sprites/preview.png
 Thumbs.db
 
 # NOTE: .kiro/ must stay committed (Devpost requirement). Do not ignore it.
+
+# build output of the CLI bundle
+packages/cli/dist/
+.haunted/backup/

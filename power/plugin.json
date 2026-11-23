@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "power-haunted-repo",
+  "version": "0.1.0",
+  "description": "Haunted Repo for Kiro: scan the workspace or any public GitHub repo for leaked secrets, vulnerable dependencies, insecure code, unsafe CI, AI-agent risks, bugs, slow code, weak docs and architecture problems, then get masked findings, plain explanations and ready diffs.",
+  "author": { "name": "Haunted Repo contributors", "url": "https://github.com/potionodevil/Kiroween---Haunted-Repo" },
+  "homepage": "https://github.com/potionodevil/Kiroween---Haunted-Repo",
+  "repository": "https://github.com/potionodevil/Kiroween---Haunted-Repo",
+  "license": "MIT",
+  "keywords": ["security", "secrets", "leaked key", "api key", "vulnerable dependency", "osv", "sql injection", "github actions", "mcp config", "code review", "haunted repo", "pre-commit"]
+}

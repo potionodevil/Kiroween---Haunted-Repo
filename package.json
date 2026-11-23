@@ -8,7 +8,9 @@
     "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
     "test": "pnpm -r --if-present test",
-    "typecheck": "pnpm -r --if-present typecheck"
+    "typecheck": "pnpm -r --if-present typecheck",
+    "build:cli": "pnpm --filter haunted-repo build",
+    "haunted": "node packages/cli/dist/cli.js"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

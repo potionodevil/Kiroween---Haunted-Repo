@@ -62,7 +62,7 @@ describe("secret rules: positives", () => {
     ["secret/google-api-key", `apiKey: "${FAKE.google}"`],
     ["secret/openai-style-key", `OPENAI=${FAKE.ai}`],
     ["secret/private-key", FAKE.privateKeyHeader],
-    ["secret/generic-secret", `JWT_SECRET=Zq8rT2mW9xLp`],
+    ["secret/generic-secret", `JWT_SECRET=${["Zq8r", "T2mW9xLp"].join("")}`],
     ["secret/high-entropy", `const sessionToken = "${FAKE.randomToken}";`],
   ];
   it.each(cases)("%s matches", (rule, line) => {

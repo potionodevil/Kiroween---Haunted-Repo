@@ -6,6 +6,7 @@ export * from "./id";
 export * from "./validate";
 export { BLAST_RADIUS, blastRadiusFor } from "./secrets/blast-radius";
 export { HEAD } from "./secrets/scan";
+export { locateSecrets, envLookup, type LocatedSecret } from "./secrets/locate";
 export { mask, MASK_CHAR } from "./secrets/mask";
 export { shannonEntropy } from "./secrets/entropy";
 export { SECRET_RULES, type SecretRule } from "./secrets/rules";

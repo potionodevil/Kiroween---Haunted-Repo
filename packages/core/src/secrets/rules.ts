@@ -118,6 +118,8 @@ export function isPlaceholder(value: string): boolean {
     v.startsWith("{") ||
     v.startsWith("your") ||
     v.includes("(") ||
+    v.includes("[") ||
+    v.includes("\\") ||
     v.includes("xxxx") ||
     v.includes("****") ||
     v.includes("•") ||

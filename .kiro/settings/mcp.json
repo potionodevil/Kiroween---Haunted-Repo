@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "haunted-repo": {
+      "command": "node",
+      "args": ["packages/cli/dist/cli.js", "mcp"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" },
+      "disabled": false,
+      "autoApprove": ["scan_file", "scan_directory", "explain_finding"]
+    }
+  }
+}

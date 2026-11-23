@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Tests on save",
+      "description": "Runs the core and CLI test suites when a TypeScript source file is saved.",
+      "trigger": "PostFileSave",
+      "matcher": "packages/.*\\.(ts|tsx)$",
+      "action": { "type": "command", "command": "pnpm -r --if-present test" },
+      "timeout": 180,
+      "enabled": true
+    }
+  ]
+}
