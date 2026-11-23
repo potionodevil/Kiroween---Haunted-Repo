@@ -29,6 +29,32 @@ body {
   outline-offset: 2px;
 }
 
+.sprite {
+  display: inline-block;
+  width: var(--fw);
+  height: var(--fh);
+  background-image: var(--sheet);
+  background-repeat: no-repeat;
+  background-size: calc(var(--fw) * 4) var(--fh);
+  image-rendering: pixelated;
+  animation: sprite-frames var(--dur, 0.8s) steps(4) infinite;
+}
+
+@keyframes sprite-frames {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(var(--fw) * -4) 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
