@@ -7,6 +7,7 @@ import { CopyButton } from "./CopyButton";
 import { badgeStyle, location } from "./CreatureCard";
 import { DisclosureDraft } from "./DisclosureDraft";
 import { RevokeToken } from "./RevokeToken";
+import { AiMedium } from "@/components/ai/AiMedium";
 
 interface Props {
   finding: Finding | undefined;
@@ -16,12 +17,13 @@ interface Props {
   /** Masked values only for the demo or a proven owner (security.md rule 8). */
   revealMasked: boolean;
   repo: string;
+  demo: boolean;
 }
 
 const MUTED = "#C2B6CF";
 const MONO: CSSProperties = { fontSize: 12, color: MUTED, border: "1px solid #45345E", borderRadius: 20, padding: "4px 10px" };
 
-export function DetailPanel({ finding: f, banished, onBanish, ritualHref, revealMasked, repo }: Props) {
+export function DetailPanel({ finding: f, banished, onBanish, ritualHref, revealMasked, repo, demo }: Props) {
   const [showPatch, setShowPatch] = useState(false);
   if (!f) {
     return (
@@ -131,6 +133,7 @@ export function DetailPanel({ finding: f, banished, onBanish, ritualHref, reveal
       )}
       {isGhost && f.rule === "secret/github-token" && !banished && <RevokeToken finding={f} />}
       {isGhost && !revealMasked && <DisclosureDraft finding={f} repo={repo} />}
+      <AiMedium finding={f} demo={demo} revealMasked={revealMasked} />
     </aside>
   );
 }

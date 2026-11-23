@@ -10,6 +10,7 @@ import { CreatureCard } from "./CreatureCard";
 import { DetailPanel } from "./DetailPanel";
 import { CopyButton } from "./CopyButton";
 import { GhostMark } from "./GhostMark";
+import { AttackPath } from "@/components/ai/AttackPath";
 
 type Filter = "all" | CreatureKind;
 const MUTED = "#C2B6CF";
@@ -28,7 +29,13 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const count = (k: CreatureKind) => alive.filter((f) => f.kind === k).length;
   const autoFixable = alive.filter((f) => f.autoFixable && f.kind !== "ghost" && f.patch);
   const liveScore = calcScore(findings, banished);
-  const visible = filter === "all" ? findings : findings.filter((f) => f.kind === filter);
+  // Time machine (feature 8): creatures appear at introducedAt; findings without a date live at HEAD.
+  const dates = useMemo(() => findings.map((f) => f.introducedAt).filter((d): d is string => Boolean(d)).sort(), [findings]);
+  const [when, setWhen] = useState<number | null>(null);
+  const span = dates.length > 1 ? { from: Date.parse(dates[0]!), to: Date.now() } : null;
+  const atTime = (f: Finding) => when === null || !f.introducedAt || Date.parse(f.introducedAt) <= when;
+  const timed = findings.filter((f) => atTime(f) && (when === null || f.introducedAt));
+  const visible = (filter === "all" ? findings : findings.filter((f) => f.kind === filter)).filter((f) => when === null || timed.includes(f));
   const active = findings.find((f) => f.id === picked) ?? visible[0];
 
   const fixAll = () => {
@@ -138,6 +145,33 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           {KINDS.length > 1 ? `${KINDS.length === 10 ? "Ten" : KINDS.length} kinds of creatures, one scan. ` : ""}Hover a creature for the fix. Click it to pin it. Bigger creature, bigger risk.
         </p>
 
+        {span && (
+          <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", background: "#22172F", border: "1px solid #33244A", borderRadius: 14, padding: "12px 16px" }}>
+            <label htmlFor="time-machine" style={{ fontWeight: 700 }}>⏳ Time machine</label>
+            <input
+              id="time-machine"
+              type="range"
+              min={span.from}
+              max={span.to}
+              step={86_400_000}
+              value={when ?? span.to}
+              onChange={(e) => setWhen(Number(e.target.value) >= span.to - 86_400_000 ? null : Number(e.target.value))}
+              style={{ flex: "1 1 260px", accentColor: "#F2B544" }}
+              aria-valuetext={when === null ? "Now" : new Date(when).toDateString()}
+            />
+            <span className="font-mono" style={{ fontSize: 13, color: "#C2B6CF", minWidth: 120 }}>
+              {when === null ? "now · all creatures" : `${new Date(when).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · ${timed.length} dated`}
+            </span>
+            {when !== null && (
+              <button type="button" onClick={() => setWhen(null)} style={{ height: 34, padding: "0 12px", borderRadius: 8, border: "1px solid #45345E", background: "transparent", color: "#F3ECDD", cursor: "pointer" }}>
+                Back to now
+              </button>
+            )}
+          </div>
+        )}
+
+        <AttackPath findings={alive} demo={demo} onPick={setPicked} />
+
         <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
           <section
             aria-label="Haunted house"
@@ -157,6 +191,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
               ritualHref={active ? `/exorcism/${active.id}?${q}` : "#"}
               revealMasked={demo}
               repo={result.repo}
+              demo={demo}
             />
           </div>
         </div>
