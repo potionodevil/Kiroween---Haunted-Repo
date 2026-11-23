@@ -1,7 +1,7 @@
 from PIL import Image
 import os, json
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "public", "sprites")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "apps", "web", "public", "sprites")
 os.makedirs(OUT, exist_ok=True)
 
 PAL = {
