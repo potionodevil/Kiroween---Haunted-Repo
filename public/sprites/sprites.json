@@ -1,0 +1,20 @@
+{
+  "ghost": {
+    "frame_w": 96,
+    "frame_h": 108,
+    "frames": 4,
+    "sheet": "ghost_sheet.png"
+  },
+  "zombie": {
+    "frame_w": 96,
+    "frame_h": 120,
+    "frames": 4,
+    "sheet": "zombie_sheet.png"
+  },
+  "bat": {
+    "frame_w": 120,
+    "frame_h": 72,
+    "frames": 4,
+    "sheet": "bat_sheet.png"
+  }
+}

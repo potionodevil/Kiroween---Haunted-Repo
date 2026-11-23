@@ -1,0 +1,20 @@
+# deps / build
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# env (GITHUB_TOKEN lives only in Vercel)
+.env
+.env.*
+!.env.example
+
+# local tooling
+.claude/settings.local.json
+tools/sprites/preview.png
+.DS_Store
+Thumbs.db
+
+# NOTE: .kiro/ must stay committed (Devpost requirement). Do not ignore it.
