@@ -37,7 +37,7 @@ It also computes the Haunting score.
 ### Acceptance criteria
 
 1. The system SHALL include at least these 10 rules: AWS access key, AWS secret key, Stripe live key, Stripe test key, GitHub token, Slack token, Google API key, OpenAI-style API key, private key block, JWT secret / generic `*_SECRET=` assignment.
-2. The system SHALL flag high-entropy strings (Shannon entropy ≥ 4.5 bits/char, length ≥ 20) that are assigned to a variable whose name contains `key`, `secret`, `token` or `password`.
+2. The system SHALL flag high-entropy strings (Shannon entropy ≥ 4.0 bits/char, length ≥ 20; a 20-char string can reach at most log2(20) ≈ 4.32) that are assigned to a variable whose name contains `key`, `secret`, `token` or `password`.
 3. WHEN a secret is found THEN the system SHALL store only a masked preview showing at most 4 real characters of the secret body.
 4. WHEN the same secret appears in several commits THEN the system SHALL return one finding with `firstSeen`, `copies` and `commitCount`.
 5. Severity: live production keys (AWS, Stripe live, GitHub, private key) SHALL be `critical`; test keys and tokens of unknown scope SHALL be `warning`; values containing `test`, `example`, `dummy` SHALL be `low`.

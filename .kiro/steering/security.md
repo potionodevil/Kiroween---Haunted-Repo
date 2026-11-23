@@ -17,8 +17,10 @@ inclusion: always
    with a clear error. It never asks the user for a token in the MVP.
 6. **Validate input.** Only `https://github.com/<owner>/<repo>` and `<owner>/<repo>` are accepted.
    Owner and repo match `^[A-Za-z0-9_.-]{1,100}$`.
-7. **Demo data uses fake keys only.** Fake keys must be obviously fake
-   (for example containing `EXAMPLE` or `FAKE`) and still match the rule pattern.
+7. **Fake keys only.** Test fixtures build fake keys at runtime by string concatenation
+   (`"sk_" + "live_" + body`), so no literal key sits in this repo. That keeps GitHub
+   push protection and our own secret check quiet. The separate demo repo uses
+   random made-up values that match the patterns but belong to no account.
 8. **This repo is scanned by its own scanner** before every commit (see hooks).
 
 When writing or changing code that touches findings, diffs or secrets,
