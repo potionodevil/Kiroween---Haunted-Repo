@@ -86,8 +86,10 @@ export async function* runSeance(owner: string, repo: string, ref: string): Asyn
   };
 
   /** Quiet command, returns stdout. */
+  // Every command changes into the folder itself, so it never depends on the default working directory.
+  const inDir = (dir: string, script: string) => `cd '${dir.replace(/'/g, "")}' && ${script}`;
   const read = async (script: string, cwd = ROOT): Promise<string> => {
-    const c = await sandbox!.runCommand({ cmd: "sh", args: ["-c", script], cwd });
+    const c = await sandbox!.runCommand("sh", ["-c", inDir(cwd, script)]);
     return (await c.stdout().catch(() => "")).trim();
   };
 
@@ -95,7 +97,7 @@ export async function* runSeance(owner: string, repo: string, ref: string): Asyn
   async function* exec(script: string, cwd: string, timeoutMs: number): AsyncGenerator<SeanceEvent, number> {
     const l = line(`$ ${script.replace(/^\. \/tmp\/hr-venv\/bin\/activate && /, "")}`, "cmd");
     if (l) yield l;
-    const c = await sandbox!.runCommand({ cmd: "sh", args: ["-c", script], cwd, detached: true, env: { CI: "1", FORCE_COLOR: "0", NO_COLOR: "1" }, timeoutMs });
+    const c = await sandbox!.runCommand({ cmd: "sh", args: ["-c", inDir(cwd, script)], detached: true, env: { CI: "1", FORCE_COLOR: "0", NO_COLOR: "1" }, timeoutMs });
     let buf = "";
     for await (const log of c.logs()) {
       buf += log.data;
@@ -219,8 +221,10 @@ export async function* runSeance(owner: string, repo: string, ref: string): Asyn
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     // Never log raw output; only the repo name.
-    console.error("seance failed", { repo: `${owner}/${repo}` });
-    yield { t: "error", message: /auth|token|oidc|unauthor/i.test(msg) ? "The sandbox is not allowed on this deployment yet (Vercel Sandbox / OIDC)." : "The séance broke off. Try again." };
+    // The SDK error text is short and holds no repo output; it is redacted anyway before it leaves.
+    const detail = redactLine(msg.replace(/\s+/g, " ").slice(0, 180));
+    console.error("seance failed", { repo: `${owner}/${repo}`, detail });
+    yield { t: "error", message: /auth|token|oidc|unauthor/i.test(msg) ? "The sandbox is not allowed on this deployment yet (Vercel Sandbox / OIDC)." : `The séance broke off: ${detail || "unknown error"}` };
   } finally {
     await sandbox?.stop().catch(() => undefined);
   }
