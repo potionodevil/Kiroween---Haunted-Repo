@@ -17,13 +17,13 @@ power/            Kiro Power: plugin.json, mcp.json, skills/haunted-repo/SKILL.m
 tools/            sprite and art generators (Python + Pillow)
 ```
 
-Planned: `packages/sandbox` (Vercel Sandbox runner for the séance room).
+The séance runner lives in `apps/web/lib/seance.ts` (Vercel Sandbox). GitHub App login in `apps/web/lib/auth.ts`.
 
 ## Rules
 
 - TypeScript `strict: true` and `noUncheckedIndexedAccess`. No `any` without a comment saying why.
 - `packages/core` has no network or file access. Input text in, `Finding[]` out. Fully unit and property testable.
-- Network lives only in `packages/github`, the web app routes (scan, OSV, revoke, AI relay) and `packages/mcp/src/remote.ts`.
+- Network lives only in `packages/github`, the web app routes (scan, OSV, revoke, AI relay, auth, fix-pr, séance) and `packages/mcp/src/remote.ts`.
 - AST parsing with `@typescript-eslint/parser`; ESLint Node API for zombies.
 - Tests: Vitest + fast-check. Every rule has one positive and one negative example and is part of the "never throws on random input" property.
 - One shared `Finding` type in `packages/core`. UI, report, CLI, MCP server and PR guardian only consume this shape.

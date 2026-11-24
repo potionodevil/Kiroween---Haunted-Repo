@@ -21,3 +21,4 @@ Check these before writing or changing any code that touches findings, diffs, se
 13. **Validate input.** Only `https://github.com/<owner>/<repo>` and `<owner>/<repo>`; owner and repo match `^[A-Za-z0-9_.-]{1,100}$`.
 14. **Fake keys only.** Test fixtures build fake keys at runtime by string concatenation, so no literal key sits in this repo and GitHub push protection stays quiet. The demo repo uses random made-up values that belong to no account.
 15. **This repo is scanned by its own scanner** before every commit (pre-commit guard) and on every file the agent writes (Kiro hook).
+16. **Every POST route checks the Origin and is rate limited.** The GitHub user token lives only in a sealed httpOnly cookie and never reaches the browser.

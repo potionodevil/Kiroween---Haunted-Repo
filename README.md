@@ -31,13 +31,21 @@ Bigger creature, bigger risk. Fix them and the **Haunting score** drops.
 | Screen | What happens |
 |---|---|
 | `/` | Scroll through the front door into the hallway. Tilt and flip the 3D trading cards. |
-| `/house` | Score, counters, filters, detail panel with CWE/OWASP, blast radius, diffs, AI medium, attack path, time machine. |
+| `/house` | Creatures first. Hover one: a popup previews the fix and opens a pull request in your repo. A terminal shows score, counts and commands. Tour on first visit. |
 | `/exorcism/[id]` | Four-step ritual with commands, boss-fight HP, rescan, decoy ghost. |
 | `/hunt` | Creatures walk through the hallway. Hover to freeze, click to banish. |
-| `/seance` | Build and tests in a sealed sandbox, proof of haunting, PR levels (prepared demo run). |
+| `/seance` | Live: clone, install, build and test your repo in a Vercel Sandbox, streamed like a terminal. Demo repo: prepared run with proof test. |
 | `/report` | Autopsy report (print to PDF, Markdown), CycloneDX SBOM, README badge. |
 
 Try it without a key: **Try a haunted demo repo** on the landing page.
+
+## Fix it in your repo
+
+1. Install the [Haunted Repo GitHub App](https://github.com/apps/haunted-repo) on your repo.
+2. Log in with GitHub on the house page.
+3. Hover a creature and click **Fix it in the repo**, or run `haunted-repo fix --pr` in the terminal panel for all auto-fixes.
+
+Every pull request goes to a new branch. Each changed spot carries a `// haunted-repo: <rule>` comment, so reviewers see what moved. Secrets are never auto-fixed.
 
 ## Guard your repo
 
@@ -59,12 +67,14 @@ npx haunted-repo mcp                # MCP server for Kiro and other agents
 - Raw values never leave the scanner. GitHub tokens can be revoked through a sealed handle that only the server can open.
 - Your AI key stays in the tab's memory. You see exactly what is sent before the first call.
 - The watcher and the pre-commit hook never use the network.
+- Your GitHub login token stays in an encrypted httpOnly cookie. Only people with push access see masked secrets or can start a séance.
+- Every POST route checks the Origin and is rate limited.
 
 ## How Kiro is used
 
 | Kiro feature | Where |
 |---|---|
-| Specs | `.kiro/specs/` — scanner-core, scanners, creatures-ui, exorcism, ai-medium, watcher-cli, kiro-power, seance-room, autopsy-report, decoy-ghost |
+| Specs | `.kiro/specs/` — scanner-core, scanners, creatures-ui, exorcism, ai-medium, watcher-cli, kiro-power, seance-room, autopsy-report, decoy-ghost, github-app, fix-popup, onboarding |
 | Steering | `.kiro/steering/security.md`, `product.md`, `tech.md` |
 | Hooks | `.kiro/hooks/secret-check.json` (scan on save, check before the agent stops), `test-on-save.json` |
 | MCP | `.kiro/settings/mcp.json` runs Haunted Repo's own MCP server on this repo |
@@ -82,7 +92,7 @@ pnpm dev           # http://localhost:3000
 pnpm build:cli     # bundle the CLI to packages/cli/dist
 ```
 
-Set `GITHUB_TOKEN` (read-only, public repos) for real scans. Vercel: Root Directory `apps/web`.
+Set `GITHUB_TOKEN` (read-only, public repos) for real scans. For login and fix PRs also `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` of the GitHub App. Vercel: Root Directory `apps/web`.
 
 Layout: `apps/web` (Next.js), `packages/core` (scanners, no I/O), `packages/github`, `packages/cli`, `packages/mcp`, `power/`, `tools/` (sprite and art generators).
 

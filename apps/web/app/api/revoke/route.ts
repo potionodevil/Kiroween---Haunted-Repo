@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { unseal } from "@/lib/seal";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,8 @@ const recent = new Map<string, number>();
  * The body carries only a sealed handle; nothing is logged.
  */
 export async function POST(req: Request) {
+  const blocked = guard(req, { name: "revoke", max: 5, windowMs: 600000 });
+  if (blocked) return blocked;
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   const last = recent.get(ip) ?? 0;
   if (Date.now() - last < 60_000) {

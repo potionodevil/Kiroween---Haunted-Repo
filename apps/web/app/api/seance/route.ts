@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { parseRepo } from "@haunted/core";
 import { canPush, getSession, userApi } from "@/lib/auth";
 import { runSeance } from "@/lib/seance";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -12,6 +13,8 @@ export const dynamic = "force-dynamic";
  * sandboxes cost money, and running someone else's code on their behalf needs their consent.
  */
 export async function POST(req: Request) {
+  const blocked = guard(req, { name: "seance", max: 3, windowMs: 600000 });
+  if (blocked) return blocked;
   const s = await getSession();
   if (!s) return NextResponse.json({ error: "Log in with GitHub to run a live séance." }, { status: 401 });
   const body = (await req.json().catch(() => null)) as { repo?: string } | null;

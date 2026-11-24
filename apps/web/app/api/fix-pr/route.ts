@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { applyPatchText, parsePatches, parseRepo } from "@haunted/core";
 import { INSTALL_URL, canPush, getSession, userApi } from "@/lib/auth";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -22,6 +23,8 @@ const unb64 = (s: string) => Buffer.from(s, "base64").toString("utf8");
  * and the visitor has push access. Ghosts are never auto-fixed (product.md).
  */
 export async function POST(req: Request) {
+  const blocked = guard(req, { name: "fix-pr", max: 10, windowMs: 600000 });
+  if (blocked) return blocked;
   const s = await getSession();
   if (!s) return NextResponse.json({ error: "Log in with GitHub first." }, { status: 401 });
 

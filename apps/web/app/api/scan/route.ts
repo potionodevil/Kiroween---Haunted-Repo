@@ -4,12 +4,15 @@ import { GitHubError } from "@haunted/github";
 import { scanRepo } from "@/lib/scan";
 import { DEMO_RESULT } from "@haunted/core";
 import { canPush, getSession } from "@/lib/auth";
+import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const blocked = guard(req, { name: "scan", max: 12, windowMs: 60000 });
+  if (blocked) return blocked;
   const url = new URL(req.url);
   if (url.searchParams.get("demo") === "1") return NextResponse.json(DEMO_RESULT);
 
