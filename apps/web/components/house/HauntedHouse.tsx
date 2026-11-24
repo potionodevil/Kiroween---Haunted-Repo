@@ -43,7 +43,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const fixAll = () => {
     if (autoFixable.length === 0) return;
     setBulkPatch(autoFixable.map((f) => f.patch).join("\n"));
-    banish(autoFixable.map((f) => f.id));
+    // Patch only: nothing changes in the repo, so nothing is marked as fixed here.
     dialogRef.current?.showModal();
   };
   const onBanish = (f: Finding) => banish([f.id]);
@@ -83,8 +83,11 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   };
   const fixPr = async () => {
     if (autoFixable.length === 0) return;
+    const list = autoFixable;
     setPr({ tone: "run", text: "opening a pull request…" });
-    setPr(await sendFix(autoFixable));
+    const r = await sendFix(list);
+    setPr(r.tone === "ok" ? { ...r, text: `${r.text} · merge it to make the fixes land in the repo` } : r);
+    if (r.tone === "ok") setCardFix((m) => Object.fromEntries([...Object.entries(m), ...list.map((f) => [f.id, r] as const)]));
   };
   const fixOne = async (f: Finding) => {
     setCardFix((m) => ({ ...m, [f.id]: { tone: "run", text: "" } }));
@@ -204,13 +207,16 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           fixState={cardFix[focused.id]}
           ritualHref={`/exorcism/${focused.id}?${q}`}
           revealMasked={demo || Boolean(viewer?.owner)}
+          repo={result.repo}
+          gitRef={result.defaultBranch}
+          demo={demo}
         />
       )}
       <dialog ref={dialogRef} className="m-auto w-[min(640px,92vw)] rounded-2xl border border-dust bg-crypt p-0 text-bone backdrop:bg-plum-night/80">
         <div className="p-5">
-          <h2 className="text-lg font-bold">Laid to rest</h2>
+          <h2 className="text-lg font-bold">Patch for {bulkPatch ? autoFixable.length : 0} auto-fixes</h2>
           <p className="mt-1 text-sm text-bone/70">
-            Apply this patch with <code className="font-mono">git apply</code> to make it stick.
+            Nothing in your repo has changed yet. Apply this patch with <code className="font-mono">git apply</code>, or run <code className="font-mono">haunted-repo fix --pr</code> to open a pull request.
           </p>
           <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-plum-night p-3 font-mono text-[11px] leading-relaxed">{bulkPatch}</pre>
           <div className="mt-4 flex justify-end gap-2">

@@ -95,7 +95,7 @@ export function ScanTerminal({
 
         <div style={{ marginTop: 8 }}>
           <button type="button" onClick={onFixAll} disabled={fixable === 0} style={{ ...btn, color: fixable ? C.text : "#5A4D6E" }}>
-            <span style={{ color: C.prompt }}>$</span> haunted-repo fix --all <span style={{ color: C.dim }}># {fixable} auto-fixable → patch</span>
+            <span style={{ color: C.prompt }}>$</span> haunted-repo fix --all <span style={{ color: C.dim }}># {fixable} auto-fixable → patch to copy</span>
           </button>
         </div>
         <div>

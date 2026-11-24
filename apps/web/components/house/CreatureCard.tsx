@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
-import { useSnippet } from "@/lib/client/snippet";
+import { useSnippet, withFix } from "@/lib/client/snippet";
 import { commentFor, type Finding, type Severity } from "@haunted/core";
 import { KIND_COLOR, KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
@@ -65,10 +65,11 @@ function preview(f: Finding): { sign: string; text: string }[] {
 
 const SIGN: Record<string, string> = { "+": "#BDEBC5", "-": "#FF9B8A", " ": "#9C8FAE" };
 
-export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixState, ritualHref, onOpen, repo, gitRef, demo }: Props) {
+export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fixState, ritualHref, onOpen, repo, gitRef, demo }: Props) {
   const [hot, setHot] = useState(false);
   const [side, setSide] = useState<"right" | "left">("right");
-  const snippet = useSnippet(f, repo, gitRef, demo, hot);
+  const snippet = useSnippet(raw, repo, gitRef, demo, hot);
+  const f = withFix(raw, snippet);
   const enter = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
     setSide(r.right + 440 > window.innerWidth ? "left" : "right");
@@ -120,7 +121,7 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
         <div className="font-mono" style={{ marginTop: 4, fontSize: 12, color: "#C2B6CF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {location(f)}
         </div>
-        <div style={{ marginTop: 12, alignSelf: "flex-start", ...badgeStyle(f.severity, banished) }}>{banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</div>
+        <div style={{ marginTop: 12, alignSelf: "flex-start", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</div>
       </button>
 
       {/* Hover popup: the fix, a preview of the change, and one click to put it in the repo. */}

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { redactLine, type Finding } from "@haunted/core";
+import { canSynthesize, redactLine, synthPatch, type Finding } from "@haunted/core";
 
 export interface Snippet {
   start: number;
@@ -52,4 +52,16 @@ export function useSnippet(f: Finding, repo: string, ref: string, demo: boolean,
     };
   }, [active, key, f, repo, ref, demo]);
   return s;
+}
+
+/**
+ * The finding with a patch: its own, or a one-line fix built from the flagged line (synthPatch).
+ * The server applies it only if the removed line still matches the file, so a stale view cannot break code.
+ */
+export function withFix(f: Finding, s: Snippet | null | undefined): Finding {
+  if (f.patch || f.kind === "ghost" || !s?.line || !canSynthesize(f.rule)) return f;
+  const text = s.lines[s.line - s.start];
+  if (text === undefined || text.includes("<REDACTED>")) return f;
+  const patch = synthPatch(f, text);
+  return patch ? { ...f, patch, autoFixable: true } : f;
 }

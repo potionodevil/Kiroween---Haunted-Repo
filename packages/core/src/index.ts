@@ -17,6 +17,7 @@ export * from "./vampires/osv";
 export { unifiedPatch, applyFix } from "./code/patch";
 export { parsePatches, applyParsed, applyPatchText, commentFor, type ParsedPatch } from "./fix/apply";
 export { redactLine } from "./secrets/redact";
+export { synthLine, synthPatch, canSynthesize } from "./fix/synth";
 export { snapshot, type RepoSnapshot } from "./repo/snapshot";
 export { findPoltergeists } from "./repo/poltergeists";
 export { findPossessedConfigs } from "./repo/possessed";

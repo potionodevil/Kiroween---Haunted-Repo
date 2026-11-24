@@ -7,13 +7,14 @@ import { measurement } from "@/lib/measure";
 import { Sprite } from "@/components/Sprite";
 import { badgeStyle } from "./CreatureCard";
 import type { PrState } from "./ScanTerminal";
+import { useSnippet, withFix } from "@/lib/client/snippet";
 
 /**
  * A creature card that flies from its place in the grid to the front, framed like a trading card.
  * Below the card: what it means and how it was measured. Esc, the backdrop or "Close" sends it back.
  */
 export function FocusCard({
-  finding: f,
+  finding: raw,
   from,
   banished,
   onClose,
@@ -21,6 +22,9 @@ export function FocusCard({
   fixState,
   ritualHref,
   revealMasked,
+  repo,
+  gitRef,
+  demo,
 }: {
   finding: Finding;
   from: DOMRect | null;
@@ -30,7 +34,12 @@ export function FocusCard({
   fixState?: PrState;
   ritualHref: string;
   revealMasked: boolean;
+  repo: string;
+  gitRef: string;
+  demo: boolean;
 }) {
+  const snippet = useSnippet(raw, repo, gitRef, demo, true);
+  const f = withFix(raw, snippet);
   const cardRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const color = KIND_COLOR[f.kind];
@@ -75,7 +84,7 @@ export function FocusCard({
           <div className="holo" style={{ opacity: 0.6, borderRadius: 14 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="font-display" style={{ fontSize: 26, color }}>{KIND_LABEL[f.kind].one}</span>
-            <span style={{ marginLeft: "auto", ...badgeStyle(f.severity, banished) }}>{banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</span>
+            <span style={{ marginLeft: "auto", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</span>
           </div>
           <div className="hr-bob" style={{ height: 150, display: "flex", alignItems: "flex-end", justifyContent: "center", margin: "6px 0 10px", background: "radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--kc) 22%, transparent), transparent 65%)" }}>
             <Sprite kind={f.kind} scale={1.2} paused={banished} />
@@ -88,7 +97,33 @@ export function FocusCard({
           <div style={{ marginTop: 12, fontSize: 13, color: "#9C8FAE" }}>{KIND_LABEL[f.kind].meaning}</div>
         </div>
 
-        <div className="focus-info">
+        <div className="focus-info" style={frame}>
+          <section>
+            <h3>Where it is</h3>
+            <div className="code-win" style={{ marginTop: 8 }}>
+              <div className="code-bar font-mono">
+                <span>{f.line ? `${f.file}:${f.line}` : f.file}</span>
+                {f.commit && <span style={{ marginLeft: "auto", color: "#9C8FAE" }}>@{f.commit.slice(0, 7)}</span>}
+              </div>
+              {snippet === undefined ? (
+                <div className="code-msg">Loading the code…</div>
+              ) : snippet === null ? (
+                <div className="code-msg">{f.kind === "vampire" ? `Found in your lockfile${f.dependencyPath?.length ? `: ${f.dependencyPath.join(" → ")}` : "."}` : "No code preview for this one."}</div>
+              ) : (
+                <pre className="font-mono code-lines" style={{ maxHeight: 320 }}>
+                  {snippet.lines.map((l, i) => {
+                    const n = snippet.start + i;
+                    return (
+                      <div key={n} className={snippet.line === n ? "code-hit" : undefined}>
+                        <span className="code-n">{n}</span>
+                        {l || " "}
+                      </div>
+                    );
+                  })}
+                </pre>
+              )}
+            </div>
+          </section>
           <section>
             <h3>What it means</h3>
             <p>{f.message}</p>
@@ -116,6 +151,19 @@ export function FocusCard({
           <section>
             <h3>The fix</h3>
             <p>{f.fix}</p>
+            {canFix && f.patch && (
+              <pre className="font-mono code-lines" style={{ margin: "10px 0 0", borderRadius: 10, background: "#0F0918", border: "1px solid #33244A", maxHeight: 200 }}>
+                {f.patch
+                  .split("\n")
+                  .filter((l) => l && !l.startsWith("---") && !l.startsWith("+++") && !l.startsWith("@@"))
+                  .map((l, i) => (
+                    <div key={i} style={{ paddingLeft: 10, color: l[0] === "+" ? "#BDEBC5" : l[0] === "-" ? "#FF9B8A" : "#9C8FAE" }}>
+                      {l}
+                    </div>
+                  ))}
+              </pre>
+            )}
+            {canFix && <p style={{ fontSize: 13, color: "#9C8FAE" }}>Opens a pull request. The changed line gets a haunted-repo comment.</p>}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
               {canFix &&
                 (fixState?.url ? (
