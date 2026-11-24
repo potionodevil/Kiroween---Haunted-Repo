@@ -51,6 +51,11 @@ describe("code pipeline", () => {
     for (const f of out) expect(isValidFinding(f)).toBe(true);
   });
 
+  it("a .then with an error handler is not a floating promise", () => {
+    expect(rules("a.ts", "fetch('/x').then((r) => r, (e) => e);")).not.toContain("zombie/floating-promise");
+    expect(rules("a.ts", "fetch('/x').then((r) => r);")).toContain("zombie/floating-promise");
+  });
+
   it("skips unparsable files and never throws", () => {
     const r = lintCode([{ path: "bad.ts", content: "const = = ;" }]);
     expect(r.skipped).toBe(1);

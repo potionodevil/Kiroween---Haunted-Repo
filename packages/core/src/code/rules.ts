@@ -228,7 +228,8 @@ export const HAUNTED_RULES: Record<string, Rule.RuleModule> = {
         const e = node.expression;
         if (e?.type !== "CallExpression") return;
         const n = calleeName(e);
-        const isThenWithoutCatch = n === "then" && !/\.catch\(/.test(rawText(ctx, e));
+        // .then(ok, onError) handles the rejection just like .catch().
+        const isThenWithoutCatch = n === "then" && (e.arguments?.length ?? 0) < 2 && !/\.catch\(/.test(rawText(ctx, e));
         const known = n === "fetch" || (e.callee.type === "Identifier" && asyncNames.has(n ?? ""));
         if (isThenWithoutCatch || known) ctx.report({ node, message: `The promise from ${n}() is neither awaited nor caught.` });
       },
