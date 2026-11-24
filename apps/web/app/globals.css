@@ -387,3 +387,5 @@ body:has(.landing) .sidedecor { display: none !important; }
 
 /* Side navigation stands out: gold edge and candle glow */
 .sidenav { border-color: #F2B54488; box-shadow: 0 0 0 4px #160E22, 0 0 0 5px #F2B54433, 0 0 30px #F2B54422, 0 16px 40px #00000099; background: linear-gradient(180deg, #2a1d3b, #1C1229); }
+.install-strip { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 16px; padding: 12px 16px; border-radius: 14px; background: #33240F; border: 2px solid #F2B544; color: #F3ECDD; font-size: 15px; }
+.install-strip > span { flex: 1 1 300px; }

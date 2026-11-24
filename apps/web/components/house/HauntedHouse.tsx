@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { score as calcScore, type CreatureKind, type Finding, type ScanResult } from "@haunted/core";
 import { useBanished } from "@/lib/client/useBanished";
 import { scanQuery } from "@/lib/client/session";
@@ -54,6 +54,14 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const focused = focus ? findings.find((f) => f.id === focus.id) : undefined;
   const [pr, setPr] = useState<PrState | null>(null);
   const [cardFix, setCardFix] = useState<Record<string, PrState>>({});
+  // Once the app shows up as installed, drop the old "install first" hints so the fix buttons come back.
+  const installed = Boolean(viewer?.installed);
+  useEffect(() => {
+    if (!installed) return;
+    const isInstallHint = (x?: PrState | null) => Boolean(x && x.tone === "bad" && x.url?.includes("/installations/new"));
+    setCardFix((m) => Object.fromEntries(Object.entries(m).filter(([, v]) => !isInstallHint(v))));
+    setPr((x) => (isInstallHint(x) ? null : x));
+  }, [installed]);
   // Auto-fix as a pull request: every changed spot gets a "haunted-repo:" comment (see /api/fix-pr).
   const sendFix = async (list: Finding[]): Promise<PrState> => {
     if (demo) {
@@ -123,6 +131,16 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
       </header>
 
       <main style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px 64px" }}>
+        {!demo && viewer?.login && viewer.owner && !viewer.installed && (
+          <div role="status" className="install-strip">
+            <span>The Haunted Repo GitHub App is not on <b className="font-mono">{result.repo}</b> yet. Fix pull requests need it.</span>
+            <a href={viewer.installUrl} target="_blank" rel="noreferrer" className="fixbtn" style={{ width: "auto", padding: "0 16px", marginTop: 0 }}>Install the app</a>
+            <button type="button" onClick={viewer.refresh} style={{ height: 42, padding: "0 14px", borderRadius: 10, border: "1px solid #F2B544", background: "transparent", color: "#F2B544", cursor: "pointer" }}>Check again</button>
+          </div>
+        )}
+        {!demo && viewer?.installed && (
+          <p className="font-mono" style={{ margin: "0 0 12px", fontSize: 13, color: "#BDEBC5" }}>✔ GitHub App installed on {result.repo} · fixes can open pull requests</p>
+        )}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "baseline", justifyContent: "space-between" }}>
           <h1 style={{ margin: 0, fontSize: 30, letterSpacing: -0.5 }}>
             {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}

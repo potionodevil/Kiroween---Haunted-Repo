@@ -59,3 +59,19 @@ export async function canPush(s: Session, owner: string, repo: string): Promise<
   const r = await userApi<{ permissions?: { push?: boolean; admin?: boolean } }>(s.token, `/repos/${owner}/${repo}`);
   return r.ok && Boolean(r.data.permissions?.push || r.data.permissions?.admin);
 }
+
+/** True when the Haunted Repo app is installed on owner/repo and this user can see that installation. */
+export async function appInstalled(s: Session, owner: string, repo: string): Promise<boolean> {
+  const list = await userApi<{ installations?: { id: number; app_slug?: string }[] }>(s.token, "/user/installations?per_page=100");
+  const mine = (list.data.installations ?? []).filter((i) => !i.app_slug || i.app_slug === APP_SLUG);
+  const want = `${owner}/${repo}`.toLowerCase();
+  for (const inst of mine) {
+    for (let page = 1; page <= 5; page++) {
+      const r = await userApi<{ repositories?: { full_name: string }[] }>(s.token, `/user/installations/${inst.id}/repositories?per_page=100&page=${page}`);
+      const repos = r.data.repositories ?? [];
+      if (repos.some((x) => x.full_name.toLowerCase() === want)) return true;
+      if (repos.length < 100) break;
+    }
+  }
+  return false;
+}
