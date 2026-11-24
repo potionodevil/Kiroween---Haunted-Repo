@@ -245,3 +245,27 @@ body {
 .caret { animation: hr-caret 1s steps(1) infinite; }
 @keyframes hr-caret { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+
+/* Fix popup on creature cards (hover or keyboard focus) */
+.cc { z-index: 1; }
+.cc:hover, .cc:focus-within, .cc-open { z-index: 30; }
+.fixpop {
+  position: absolute; left: -10px; right: -10px; top: calc(100% - 14px);
+  min-width: 260px; padding: 14px; border-radius: 14px;
+  background: #22172F; border: 2px solid #F2B544; color: #F3ECDD;
+  box-shadow: 0 22px 44px #000000aa;
+  opacity: 0; transform: translateY(10px) scale(.97); pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+.fixpop::before {
+  content: ""; position: absolute; top: -9px; left: 50%; width: 14px; height: 14px; margin-left: -7px;
+  background: #22172F; border-left: 2px solid #F2B544; border-top: 2px solid #F2B544; transform: rotate(45deg);
+}
+.cc:hover .fixpop, .cc:focus-within .fixpop, .cc-open .fixpop { opacity: 1; transform: none; pointer-events: auto; }
+.fixbtn {
+  margin-top: 12px; width: 100%; height: 42px; border: 0; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: #F2B544; color: #241604; font-weight: 800; font-size: 14px; text-decoration: none; cursor: pointer;
+}
+.fixbtn:disabled { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .fixpop { transition: none; } }

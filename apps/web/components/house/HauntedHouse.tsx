@@ -47,33 +47,43 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
 
   const viewer = useViewer(demo ? null : result.repo);
   const [pr, setPr] = useState<PrState | null>(null);
+  const [cardFix, setCardFix] = useState<Record<string, PrState>>({});
   // Auto-fix as a pull request: every changed spot gets a "haunted-repo:" comment (see /api/fix-pr).
-  const fixPr = async () => {
-    if (autoFixable.length === 0) return;
+  const sendFix = async (list: Finding[]): Promise<PrState> => {
     if (demo) {
-      setPr({ tone: "ok", text: `pull request #48 opened (demo) · ${autoFixable.length} fixes, each marked in the code` });
-      return;
+      banish(list.map((f) => f.id));
+      return { tone: "ok", text: `Pull request #48 opened (demo) · ${list.length} fix${list.length === 1 ? "" : "es"}` };
     }
     if (!viewer?.login) {
       location.href = loginHref(`/house?${q}&cached=1`);
-      return;
+      return { tone: "run", text: "Logging in with GitHub…" };
     }
-    setPr({ tone: "run", text: "opening a pull request…" });
     try {
       const res = await fetch("/api/fix-pr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: result.repo, mark: true, fixes: autoFixable.map((f) => ({ rule: f.rule, title: f.title, patch: f.patch })) }),
+        body: JSON.stringify({ repo: result.repo, mark: true, fixes: list.map((f) => ({ rule: f.rule, title: f.title, patch: f.patch })) }),
       });
       const d = (await res.json()) as { url?: string; number?: number; error?: string; installUrl?: string; skipped?: string[] };
       if (d.url) {
-        setPr({ tone: "ok", text: `pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}`, url: d.url });
-        banish(autoFixable.map((f) => f.id));
-      } else if (d.installUrl) setPr({ tone: "bad", text: `${d.error} → install`, url: d.installUrl });
-      else setPr({ tone: "bad", text: d.error ?? `failed (${res.status})` });
+        banish(list.map((f) => f.id));
+        return { tone: "ok", text: `Pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}`, url: d.url };
+      }
+      if (d.installUrl) return { tone: "bad", text: "Install the GitHub App first", url: d.installUrl };
+      return { tone: "bad", text: d.error ?? `Failed (${res.status})` };
     } catch {
-      setPr({ tone: "bad", text: "could not reach the server" });
+      return { tone: "bad", text: "Could not reach the server" };
     }
+  };
+  const fixPr = async () => {
+    if (autoFixable.length === 0) return;
+    setPr({ tone: "run", text: "opening a pull request…" });
+    setPr(await sendFix(autoFixable));
+  };
+  const fixOne = async (f: Finding) => {
+    setCardFix((m) => ({ ...m, [f.id]: { tone: "run", text: "" } }));
+    const st = await sendFix([f]);
+    setCardFix((m) => ({ ...m, [f.id]: st }));
   };
 
   const headerLink: CSSProperties = { height: 44, display: "inline-flex", alignItems: "center", padding: "0 16px", borderRadius: 10, border: "1px solid #45345E", color: "#F3ECDD", textDecoration: "none" };
@@ -107,7 +117,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           <h1 style={{ margin: 0, fontSize: 30, letterSpacing: -0.5 }}>
             {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}
           </h1>
-          <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature for the fix. Click to pin. Bigger creature, bigger risk.</p>
+          <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature to fix it in your repo. Bigger creature, bigger risk.</p>
         </div>
 
         <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
@@ -117,7 +127,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             style={{ flex: "999 1 620px", minWidth: 0, border: "1px solid #33244A", borderRadius: 20, padding: 24, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}
           >
             {visible.map((f) => (
-              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} />
+              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} onFix={(x) => void fixOne(x)} fixState={cardFix[f.id]} ritualHref={`/exorcism/${f.id}?${q}`} />
             ))}
             {visible.length === 0 && <p style={{ color: MUTED }}>No creatures of this kind.</p>}
           </section>
