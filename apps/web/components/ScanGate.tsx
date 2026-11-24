@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { ScanResult } from "@haunted/core";
 import { DEMO_REPO, loadResult, saveResult } from "@/lib/client/session";
 import { Sprite } from "@/components/Sprite";
+import { HauntedLoader } from "@/components/HauntedLoader";
 import { HauntedHouse } from "@/components/house/HauntedHouse";
 import { HuntScene } from "@/components/hunt/HuntScene";
 import { Ritual } from "@/components/exorcism/Ritual";
@@ -86,32 +87,20 @@ export function ScanGate({ repo, demo, useCache = false, view, id }: Props) {
 
   if (state.status === "done") return <>{renderView(view, { result: state.result, demo, rescan: run }, id)}</>;
 
+  if (state.status === "loading") {
+    return <HauntedLoader label={`Walking through up to 300 commits of ${demo ? "the demo repo" : repo}…`} sub="Big repos take up to a minute." />;
+  }
+
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
-      {state.status === "loading" ? (
-        <>
-          <div className="flex items-end gap-8" aria-hidden="true">
-            <Sprite kind="ghost" scale={0.8} />
-            <Sprite kind="zombie" scale={0.8} />
-            <Sprite kind="bat" scale={0.8} />
-          </div>
-          <p role="status" className="text-lg">
-            Walking through up to 300 commits of <span className="font-mono">{demo ? "the demo repo" : repo}</span>…
-          </p>
-          <p className="text-sm text-bone/60">Big repos take up to a minute.</p>
-        </>
-      ) : (
-        <>
-          <Sprite kind="ghost" scale={0.8} paused />
-          <p role="alert" className="max-w-md text-lg">{state.message}</p>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => void run()} className="rounded-lg bg-lantern px-4 py-2 font-semibold text-plum-night">
-              Try again
-            </button>
-            <Link href="/" className="rounded-lg border border-dust px-4 py-2">Back</Link>
-          </div>
-        </>
-      )}
+      <Sprite kind="ghost" scale={0.8} paused />
+      <p role="alert" className="max-w-md text-lg">{state.message}</p>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => void run()} className="rounded-lg bg-lantern px-4 py-2 font-semibold text-plum-night">
+          Try again
+        </button>
+        <Link href="/" className="rounded-lg border border-dust px-4 py-2">Back</Link>
+      </div>
     </main>
   );
 }

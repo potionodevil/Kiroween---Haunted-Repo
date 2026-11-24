@@ -10,6 +10,7 @@ import { CopyButton } from "./CopyButton";
 import { GhostMark } from "./GhostMark";
 import { AttackPath } from "@/components/ai/AttackPath";
 import { ScanTerminal, type PrState } from "./ScanTerminal";
+import { Onboarding, useFirstVisit } from "./Onboarding";
 import { loginHref, logout, useViewer } from "@/lib/client/viewer";
 
 type Filter = "all" | CreatureKind;
@@ -46,6 +47,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const onBanish = (f: Finding) => banish([f.id]);
 
   const viewer = useViewer(demo ? null : result.repo);
+  const [tour, setTour] = useFirstVisit();
   const [pr, setPr] = useState<PrState | null>(null);
   const [cardFix, setCardFix] = useState<Record<string, PrState>>({});
   // Auto-fix as a pull request: every changed spot gets a "haunted-repo:" comment (see /api/fix-pr).
@@ -104,6 +106,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             ) : (
               <a href={loginHref(`/house?${q}`)} style={{ ...headerLink, borderColor: "#F2B544", color: "#F2B544" }}>Log in with GitHub</a>
             ))}
+            <button type="button" onClick={() => setTour(true)} aria-label="Show the tour" title="Show the tour" style={{ ...headerLink, width: 44, padding: 0, justifyContent: "center", background: "transparent", cursor: "pointer", fontWeight: 800 }}>?</button>
             <Link href={`/hunt?${q}`} style={headerLink}>Live hunt</Link>
             <Link href={`/seance?${q}`} style={headerLink}>Séance room</Link>
             <Link href={`/report?${q}`} style={headerLink}>Autopsy report</Link>
@@ -184,6 +187,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         <AttackPath findings={alive} demo={demo} onPick={setPicked} />
       </main>
 
+      <Onboarding open={tour} onClose={() => setTour(false)} />
       <dialog ref={dialogRef} className="m-auto w-[min(640px,92vw)] rounded-2xl border border-dust bg-crypt p-0 text-bone backdrop:bg-plum-night/80">
         <div className="p-5">
           <h2 className="text-lg font-bold">Laid to rest</h2>

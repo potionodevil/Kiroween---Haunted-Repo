@@ -269,3 +269,33 @@ body {
 }
 .fixbtn:disabled { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .fixpop { transition: none; } }
+
+/* Side decorations (wide screens only) */
+.sidedecor { display: none; }
+@media (min-width: 1440px) {
+  .sidedecor { display: block; position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+  .sd-left, .sd-right { position: absolute; top: 0; bottom: 0; width: 170px; }
+  .sd-left { left: 0; } .sd-right { right: 0; }
+  .sd-thread { position: absolute; top: 0; left: 58px; display: flex; flex-direction: column; align-items: center; animation: hr-dangle 7s ease-in-out infinite; transform-origin: top center; }
+  .sd-candles { position: absolute; bottom: 24px; left: 28px; display: flex; gap: 8px; align-items: flex-end; }
+  .sd-bat { position: absolute; top: 34%; right: 46px; animation: hr-hover 6s ease-in-out infinite; }
+  .sd-lantern { position: absolute; top: 0; right: 60px; width: 40px; }
+  .lantern-glass { width: 28px; height: 34px; margin: 0 auto; background: radial-gradient(circle, #FFE3A3 0%, #F2B544 55%, #B87A1C 100%); box-shadow: 0 0 40px 12px #F2B54455; animation: hrpulse 2.6s ease-in-out infinite; }
+}
+.flame { width: 8px; height: 14px; border-radius: 50% 50% 40% 40%; background: radial-gradient(circle at 50% 70%, #FFF3C4 0%, #F2B544 55%, #E0742A 100%); box-shadow: 0 0 16px 6px #F2B54444; animation: hr-flicker 0.9s ease-in-out infinite alternate; transform-origin: bottom center; }
+@keyframes hr-flicker { 0% { transform: scale(1, 1) rotate(-2deg); } 50% { transform: scale(.9, 1.1) rotate(2deg); } 100% { transform: scale(1.05, .92) rotate(-1deg); } }
+@keyframes hr-dangle { 0%, 100% { transform: translateY(-40px) rotate(-3deg); } 50% { transform: translateY(30px) rotate(3deg); } }
+@keyframes hr-hover { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-14px, -22px); } 66% { transform: translate(8px, 14px); } }
+
+/* Loading hallway */
+.loader-hall { position: relative; width: min(460px, 92vw); height: 110px; overflow: hidden; border-radius: 14px; background: linear-gradient(#22172F, #160E22); border: 1px solid #33244A; }
+.loader-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; background: repeating-linear-gradient(90deg, #2C1E40 0 22px, #33244A 22px 44px); }
+.loader-walk { position: absolute; bottom: 12px; left: -90px; animation: hr-cross 6.6s linear infinite; }
+.loader-fly { bottom: 58px; }
+@keyframes hr-cross { to { left: 100%; } }
+.spin { display: inline-block; animation: hr-spin .8s steps(4) infinite; }
+@keyframes hr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .sd-thread, .sd-bat, .flame, .lantern-glass, .loader-walk, .spin { animation: none !important; }
+  .loader-walk { left: 20%; } .loader-walk + .loader-walk { left: 45%; } .loader-fly { left: 70%; }
+}
