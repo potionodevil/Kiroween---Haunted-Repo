@@ -15,6 +15,7 @@
     "@haunted/core": "workspace:*",
     "@haunted/github": "workspace:*",
     "@typescript-eslint/parser": "^8.73.0",
+    "@vercel/sandbox": "^4.1.0",
     "eslint": "^10.15.0",
     "next": "^16.4.6",
     "react": "^19.3.1",

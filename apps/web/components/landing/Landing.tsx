@@ -119,7 +119,7 @@ export function Landing() {
         </nav>
       </header>
 
-      <section className="dolly" aria-label="Enter the haunted house" style={{ position: "relative", height: 2600, marginTop: -86 }}>
+      <section className="dolly" aria-label="Enter the haunted house" style={{ position: "relative", height: 3800, marginTop: -86 }}>
         <div className="sticky-stage" style={{ position: "sticky", top: 0, height: 880, overflow: "hidden", perspective: 1000, perspectiveOrigin: "75% 76%", background: "#160E22" }}>
           <div className="hall fx" aria-hidden="true" style={{ position: "absolute", inset: 0, background: "#2C1E40 url(/art/hall.png) repeat-x 0 0/auto 100%", imageRendering: "pixelated" }}>
             {WALKERS.map((w, i) => (
@@ -218,9 +218,9 @@ export function Landing() {
             <p className="font-display" style={{ margin: 0, fontSize: 72, lineHeight: 1 }}>Step through the door</p>
             <p style={{ margin: "14px 0 0", fontSize: 20, color: MUTED }}>Every commit is a room. We walk through 300 of them in about ten seconds.</p>
           </div>
-          <div className="cap3 fx" style={{ pointerEvents: "none", position: "absolute", zIndex: 5, left: 0, right: 0, bottom: 56, textAlign: "center", opacity: 0 }}>
-            <p className="font-display" style={{ margin: 0, fontSize: "clamp(40px, 5vw, 64px)", lineHeight: 1 }}>Something is already walking around</p>
-            <p style={{ margin: "12px 0 0", fontSize: 19, color: MUTED }}>Ghosts, vampires, spiders, zombies and six more. Each one is a real problem in your code.</p>
+          <div className="cap3 fx" style={{ pointerEvents: "none", position: "absolute", zIndex: 5, left: 0, right: 0, bottom: 0, padding: "70px 24px 34px", textAlign: "center", opacity: 0, background: "linear-gradient(to top,#160E22F2 0%,#160E22B3 60%,transparent 100%)" }}>
+            <p className="font-display" style={{ margin: 0, fontSize: "clamp(32px, 4vw, 48px)", lineHeight: 1 }}>Something is already walking around</p>
+            <p style={{ margin: "10px 0 0", fontSize: 17, color: MUTED }}>Ghosts, vampires, spiders, zombies and six more. Each one is a real problem in your code.</p>
           </div>
         </div>
       </section>

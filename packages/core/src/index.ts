@@ -15,6 +15,8 @@ export { buildRitual, templateFor, TEMPLATE_BY_RULE, type RitualStep, type Ritua
 export * from "./vampires/lockfiles";
 export * from "./vampires/osv";
 export { unifiedPatch, applyFix } from "./code/patch";
+export { parsePatches, applyParsed, applyPatchText, commentFor, type ParsedPatch } from "./fix/apply";
+export { redactLine } from "./secrets/redact";
 export { snapshot, type RepoSnapshot } from "./repo/snapshot";
 export { findPoltergeists } from "./repo/poltergeists";
 export { findPossessedConfigs } from "./repo/possessed";

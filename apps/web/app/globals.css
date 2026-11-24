@@ -87,11 +87,12 @@ body {
 @supports (animation-timeline: view()) {
   .dolly { view-timeline: --dolly block; }
   .fx { animation-timeline: --dolly; animation-fill-mode: both; animation-timing-function: linear; animation-duration: auto; }
-  .facade { animation-name: hrdolly, hrout; animation-range: contain 0% contain 70%; }
-  .hall { animation-name: hrhall; animation-range: contain 38% contain 80%; }
-  .cap1 { animation-name: hrout; animation-range: contain 0% contain 22%; }
-  .cap2 { animation-name: hrcap; animation-range: contain 24% contain 58%; }
-  .cap3 { animation-name: hrcap; animation-range: contain 60% contain 100%; }
+  /* Longer ride: the room is fully visible on its own (55%-72%) before the last caption rises. */
+  .facade { animation-name: hrdolly, hrout; animation-range: contain 0% contain 52%; }
+  .hall { animation-name: hrhall; animation-range: contain 30% contain 55%; }
+  .cap1 { animation-name: hrout; animation-range: contain 0% contain 15%; }
+  .cap2 { animation-name: hrcap; animation-range: contain 16% contain 42%; }
+  .cap3 { animation-name: hrcap; animation-range: contain 72% contain 100%; }
 }
 @supports not (animation-timeline: view()) {
   .dolly { height: auto !important; }
@@ -239,3 +240,8 @@ body {
   .report * { color: #111 !important; background: transparent !important; border-color: #ccc !important; box-shadow: none !important; }
   .report .sprite { display: none; }
 }
+
+/* Terminal caret (house summary, live séance) */
+.caret { animation: hr-caret 1s steps(1) infinite; }
+@keyframes hr-caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .caret { animation: none; } }

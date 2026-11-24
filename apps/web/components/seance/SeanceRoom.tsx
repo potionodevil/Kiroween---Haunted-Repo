@@ -3,10 +3,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Sprite } from "@/components/Sprite";
 import { CopyButton } from "@/components/house/CopyButton";
+import { LiveSeance } from "./LiveSeance";
 
 /**
  * Séance room (features 26, 32, 33), ported from the design kit.
- * Plays the prepared demo run; the live Vercel Sandbox runner replaces BEFORE/AFTER in M3.
+ * The demo repo plays a prepared run; real repos stream a live Vercel Sandbox run (LiveSeance).
  */
 type Tone = "ok" | "bad" | "warn" | "dim";
 type Phase = "idle" | "running" | "proven" | "fixing" | "fixed";
@@ -110,7 +111,7 @@ export function SeanceRoom({ repoLabel, isDemo }: { repoLabel: string; isDemo: b
     <div style={{ minHeight: "100vh", background: "#160E22", color: "#F3ECDD" }}>
       <header style={{ borderBottom: "1px solid #33244A" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "18px 32px", display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "space-between" }}>
-          <Link href={isDemo ? "/house?demo=1&cached=1" : "/"} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#F3ECDD" }}>
+          <Link href={isDemo ? "/house?demo=1&cached=1" : `/house?repo=${encodeURIComponent(repoLabel)}&cached=1`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#F3ECDD" }}>
             <span className="font-display" style={{ fontSize: 26 }}>Haunted Repo</span>
             <span style={{ fontSize: 15, color: "#9C8FAE" }}>Séance room</span>
           </Link>
@@ -133,21 +134,16 @@ export function SeanceRoom({ repoLabel, isDemo }: { repoLabel: string; isDemo: b
           <p style={{ margin: "14px 0 0", maxWidth: 560, fontSize: 19, lineHeight: 1.55, color: "#C2B6CF" }}>
             We run your build and tests in a sealed sandbox, prove each problem with a failing test, fix it, and only then open a pull request.
           </p>
-          <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          {isDemo && <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={run} style={{ height: 56, padding: "0 26px", border: 0, borderRadius: 14, fontWeight: 800, fontSize: 17, cursor: "pointer", ...(running ? { background: "#45345E", color: "#C2B6CF" } : { background: "#F2B544", color: "#241604" }) }}>
               {running ? "The spirits are talking…" : phase === "idle" ? "Begin the séance" : "Run again"}
             </button>
             <span style={{ fontSize: 15, color: "#9C8FAE", maxWidth: 520 }}>No secrets, no tokens, no network after install. The sandbox is destroyed after the run.</span>
-          </div>
-          {!isDemo && (
-            <p style={{ margin: "16px 0 0", maxWidth: 560, fontSize: 14, color: "#C2B6CF", border: "1px solid #45345E", borderRadius: 10, padding: "8px 12px" }}>
-              The live sandbox for your own repo is not switched on yet. This room plays the prepared run of the demo repo.
-            </p>
-          )}
+          </div>}
         </div>
       </section>
 
-      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "36px 32px 64px", display: "flex", flexWrap: "wrap", gap: 28, alignItems: "flex-start" }}>
+      {!isDemo ? <LiveSeance repo={repoLabel} /> : <main style={{ maxWidth: 1280, margin: "0 auto", padding: "36px 32px 64px", display: "flex", flexWrap: "wrap", gap: 28, alignItems: "flex-start" }}>
         <section aria-label="Sandbox output" style={{ flex: "999 1 560px", minWidth: 0, perspective: 1400 }}>
           <div style={{ background: "#0F0918", border: "2px solid #33244A", borderRadius: 18, overflow: "hidden", transform: "rotateX(1.5deg)", transformOrigin: "50% 0", boxShadow: "0 30px 60px #00000066" }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "12px 16px", borderBottom: "1px solid #33244A", background: "#1C1229" }}>
@@ -249,7 +245,7 @@ export function SeanceRoom({ repoLabel, isDemo }: { repoLabel: string; isDemo: b
             </section>
           )}
         </aside>
-      </main>
+      </main>}
     </div>
   );
 }

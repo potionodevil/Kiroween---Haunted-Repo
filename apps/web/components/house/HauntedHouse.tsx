@@ -1,16 +1,16 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
-import { CREATURE_KINDS, score as calcScore, scoreLabel, type CreatureKind, type Finding, type ScanResult } from "@haunted/core";
+import { score as calcScore, type CreatureKind, type Finding, type ScanResult } from "@haunted/core";
 import { useBanished } from "@/lib/client/useBanished";
 import { scanQuery } from "@/lib/client/session";
-import { KIND_LABEL } from "@/lib/sprites";
-import { Sprite } from "@/components/Sprite";
 import { CreatureCard } from "./CreatureCard";
 import { DetailPanel } from "./DetailPanel";
 import { CopyButton } from "./CopyButton";
 import { GhostMark } from "./GhostMark";
 import { AttackPath } from "@/components/ai/AttackPath";
+import { ScanTerminal, type PrState } from "./ScanTerminal";
+import { loginHref, logout, useViewer } from "@/lib/client/viewer";
 
 type Filter = "all" | CreatureKind;
 const MUTED = "#C2B6CF";
@@ -24,7 +24,6 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   const dialogRef = useRef<HTMLDialogElement>(null);
   const q = scanQuery(result.repo, demo);
 
-  const KINDS = useMemo(() => CREATURE_KINDS.filter((k) => findings.some((f) => f.kind === k)), [findings]);
   const alive = useMemo(() => findings.filter((f) => !banished.has(f.id)), [findings, banished]);
   const count = (k: CreatureKind) => alive.filter((f) => f.kind === k).length;
   const autoFixable = alive.filter((f) => f.autoFixable && f.kind !== "ghost" && f.patch);
@@ -46,14 +45,37 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
   };
   const onBanish = (f: Finding) => banish([f.id]);
 
-  const chip = (on: boolean): CSSProperties => ({
-    height: 44,
-    padding: "0 16px",
-    borderRadius: 22,
-    fontSize: 15,
-    cursor: "pointer",
-    ...(on ? { background: "#F3ECDD", color: "#160E22", border: "1px solid #F3ECDD" } : { background: "transparent", color: MUTED, border: "1px solid #45345E" }),
-  });
+  const viewer = useViewer(demo ? null : result.repo);
+  const [pr, setPr] = useState<PrState | null>(null);
+  // Auto-fix as a pull request: every changed spot gets a "haunted-repo:" comment (see /api/fix-pr).
+  const fixPr = async () => {
+    if (autoFixable.length === 0) return;
+    if (demo) {
+      setPr({ tone: "ok", text: `pull request #48 opened (demo) · ${autoFixable.length} fixes, each marked in the code` });
+      return;
+    }
+    if (!viewer?.login) {
+      location.href = loginHref(`/house?${q}&cached=1`);
+      return;
+    }
+    setPr({ tone: "run", text: "opening a pull request…" });
+    try {
+      const res = await fetch("/api/fix-pr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo: result.repo, mark: true, fixes: autoFixable.map((f) => ({ rule: f.rule, title: f.title, patch: f.patch })) }),
+      });
+      const d = (await res.json()) as { url?: string; number?: number; error?: string; installUrl?: string; skipped?: string[] };
+      if (d.url) {
+        setPr({ tone: "ok", text: `pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}`, url: d.url });
+        banish(autoFixable.map((f) => f.id));
+      } else if (d.installUrl) setPr({ tone: "bad", text: `${d.error} → install`, url: d.installUrl });
+      else setPr({ tone: "bad", text: d.error ?? `failed (${res.status})` });
+    } catch {
+      setPr({ tone: "bad", text: "could not reach the server" });
+    }
+  };
+
   const headerLink: CSSProperties = { height: 44, display: "inline-flex", alignItems: "center", padding: "0 16px", borderRadius: 10, border: "1px solid #45345E", color: "#F3ECDD", textDecoration: "none" };
 
   return (
@@ -65,14 +87,13 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             <span className="font-mono" style={{ background: "#22172F", border: "1px solid #33244A", borderRadius: 10, padding: "10px 14px" }}>
               github.com/{result.repo}
             </span>
-            <button
-              type="button"
-              onClick={fixAll}
-              disabled={autoFixable.length === 0}
-              style={{ height: 44, padding: "0 16px", borderRadius: 10, border: `1px solid ${autoFixable.length ? "#F2B544" : "#45345E"}`, background: "transparent", color: autoFixable.length ? "#F2B544" : "#9C8FAE", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
-            >
-              Fix all auto-fixable ({autoFixable.length})
-            </button>
+            {!demo && viewer?.configured && (viewer.login ? (
+              <button type="button" onClick={() => void logout()} style={{ ...headerLink, background: "transparent", cursor: "pointer", fontSize: 14 }} title="Log out">
+                @{viewer.login}{viewer.owner ? " · owner" : ""}
+              </button>
+            ) : (
+              <a href={loginHref(`/house?${q}`)} style={{ ...headerLink, borderColor: "#F2B544", color: "#F2B544" }}>Log in with GitHub</a>
+            ))}
             <Link href={`/hunt?${q}`} style={headerLink}>Live hunt</Link>
             <Link href={`/seance?${q}`} style={headerLink}>Séance room</Link>
             <Link href={`/report?${q}`} style={headerLink}>Autopsy report</Link>
@@ -81,72 +102,52 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         </div>
       </header>
 
-      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "36px 32px 64px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "stretch" }}>
-          <div style={{ flex: "1 1 300px", background: "#22172F", border: "1px solid #33244A", borderRadius: 18, padding: 28, display: "flex", gap: 24, alignItems: "center" }}>
-            <div
-              role="img"
-              aria-label={`Haunting score ${liveScore} of 100`}
-              style={{ width: 120, height: 120, flex: "none", borderRadius: 60, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .4s", background: `conic-gradient(#F2B544 ${liveScore}%, #33244A 0)` }}
-            >
-              <div style={{ width: 100, height: 100, borderRadius: 50, background: "#22172F", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 36, fontWeight: 700, lineHeight: 1 }}>{liveScore}</span>
-                <span style={{ fontSize: 12, color: MUTED }}>/ 100</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, color: "#F2B544" }}>Haunting score</div>
-              <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6 }}>{scoreLabel(liveScore)}</div>
-              <div style={{ color: MUTED, fontSize: 15, marginTop: 6 }}>
-                {result.commitsScanned} commits · {result.filesScanned} files · {(result.durationMs / 1000).toFixed(1)} s{result.partial ? " · partial" : ""}
-              </div>
-            </div>
-          </div>
-          <div style={{ flex: "2 1 560px", display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10 }}>
-            {CREATURE_KINDS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => KINDS.includes(k) && setFilter(k)}
-                aria-label={`${count(k)} ${KIND_LABEL[k].many}, ${KIND_LABEL[k].meaning}`}
-                style={{ background: "#22172F", border: "1px solid #33244A", borderRadius: 14, padding: "10px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, color: "#F3ECDD", cursor: KINDS.includes(k) ? "pointer" : "default" }}
-              >
-                <div style={{ height: 46, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-                  <Sprite kind={k} scale={0.4} />
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{count(k)}</div>
-                <div style={{ fontSize: 12, color: MUTED, textAlign: "center" }}>{KIND_LABEL[k].short}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {result.notes.length > 0 && (
-          <ul style={{ margin: "16px 0 0", padding: "12px 18px", listStyle: "none", border: "1px solid #33244A", borderRadius: 14, color: MUTED, fontSize: 14 }}>
-            {result.notes.map((n) => (
-              <li key={n}>{n}</li>
-            ))}
-          </ul>
-        )}
-
-        <div style={{ marginTop: 40, display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontSize: 32, letterSpacing: -0.5 }}>
+      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px 64px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "baseline", justifyContent: "space-between" }}>
+          <h1 style={{ margin: 0, fontSize: 30, letterSpacing: -0.5 }}>
             {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}
           </h1>
-          <div role="group" aria-label="Filter findings" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {(["all", ...KINDS] as Filter[]).map((k) => (
-              <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} style={chip(filter === k)}>
-                {k === "all" ? `All ${alive.length}` : `${KIND_LABEL[k].many} ${count(k)}`}
-              </button>
+          <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature for the fix. Click to pin. Bigger creature, bigger risk.</p>
+        </div>
+
+        <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+          <section
+            aria-label="Haunted house"
+            className="wp"
+            style={{ flex: "999 1 620px", minWidth: 0, border: "1px solid #33244A", borderRadius: 20, padding: 24, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}
+          >
+            {visible.map((f) => (
+              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} />
             ))}
+            {visible.length === 0 && <p style={{ color: MUTED }}>No creatures of this kind.</p>}
+          </section>
+          <div style={{ flex: "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 18, position: "sticky", top: 16 }}>
+            <ScanTerminal
+              result={result}
+              score={liveScore}
+              count={count}
+              filter={filter}
+              onFilter={setFilter}
+              fixable={autoFixable.length}
+              onFixAll={fixAll}
+              onFixPr={() => void fixPr()}
+              prState={pr}
+              login={viewer?.login ?? null}
+            />
+            <DetailPanel
+              finding={active}
+              banished={active ? banished.has(active.id) : false}
+              onBanish={onBanish}
+              ritualHref={active ? `/exorcism/${active.id}?${q}` : "#"}
+              revealMasked={demo || Boolean(viewer?.owner)}
+              repo={result.repo}
+              demo={demo}
+            />
           </div>
         </div>
-        <p style={{ margin: "10px 0 0", color: "#9C8FAE", fontSize: 15 }}>
-          {KINDS.length > 1 ? `${KINDS.length === 10 ? "Ten" : KINDS.length} kinds of creatures, one scan. ` : ""}Hover a creature for the fix. Click it to pin it. Bigger creature, bigger risk.
-        </p>
 
         {span && (
-          <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", background: "#22172F", border: "1px solid #33244A", borderRadius: 14, padding: "12px 16px" }}>
+          <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", background: "#22172F", border: "1px solid #33244A", borderRadius: 14, padding: "12px 16px" }}>
             <label htmlFor="time-machine" style={{ fontWeight: 700 }}>⏳ Time machine</label>
             <input
               id="time-machine"
@@ -171,30 +172,6 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
         )}
 
         <AttackPath findings={alive} demo={demo} onPick={setPicked} />
-
-        <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
-          <section
-            aria-label="Haunted house"
-            className="wp"
-            style={{ flex: "999 1 620px", minWidth: 0, border: "1px solid #33244A", borderRadius: 20, padding: 28, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}
-          >
-            {visible.map((f) => (
-              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} />
-            ))}
-            {visible.length === 0 && <p style={{ color: MUTED }}>No creatures of this kind.</p>}
-          </section>
-          <div style={{ flex: "1 1 340px", minWidth: 0, position: "sticky", top: 16 }}>
-            <DetailPanel
-              finding={active}
-              banished={active ? banished.has(active.id) : false}
-              onBanish={onBanish}
-              ritualHref={active ? `/exorcism/${active.id}?${q}` : "#"}
-              revealMasked={demo}
-              repo={result.repo}
-              demo={demo}
-            />
-          </div>
-        </div>
       </main>
 
       <dialog ref={dialogRef} className="m-auto w-[min(640px,92vw)] rounded-2xl border border-dust bg-crypt p-0 text-bone backdrop:bg-plum-night/80">

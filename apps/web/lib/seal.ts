@@ -33,3 +33,29 @@ export function unseal(handle: string): string | null {
     return null;
   }
 }
+
+/** Encrypts a small JSON value for an httpOnly cookie (GitHub login session). Separate key domain from token handles. */
+function cookieKey(): Buffer {
+  const material = process.env.HAUNTED_SEAL_KEY ?? process.env.GITHUB_CLIENT_SECRET ?? process.env.GITHUB_TOKEN;
+  return material ? createHash("sha256").update(`haunted-cookie:${material}`).digest() : RANDOM;
+}
+
+export function sealJson(value: unknown): string {
+  const iv = randomBytes(12);
+  const c = createCipheriv("aes-256-gcm", cookieKey(), iv);
+  const body = Buffer.concat([c.update(JSON.stringify(value), "utf8"), c.final()]);
+  return Buffer.concat([iv, c.getAuthTag(), body]).toString("base64url");
+}
+
+export function unsealJson<T>(handle: string | undefined): T | null {
+  if (!handle) return null;
+  try {
+    const buf = Buffer.from(handle, "base64url");
+    if (buf.length < 29 || buf.length > 4096) return null;
+    const d = createDecipheriv("aes-256-gcm", cookieKey(), buf.subarray(0, 12));
+    d.setAuthTag(buf.subarray(12, 28));
+    return JSON.parse(Buffer.concat([d.update(buf.subarray(28)), d.final()]).toString("utf8")) as T;
+  } catch {
+    return null;
+  }
+}
