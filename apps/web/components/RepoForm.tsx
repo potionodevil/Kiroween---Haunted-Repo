@@ -20,7 +20,7 @@ export function RepoForm({ hint = "Free for public repos. Secrets are masked and
           setError("That does not look like a GitHub repo");
           return;
         }
-        router.push(`/house?repo=${encodeURIComponent(`${ref.owner}/${ref.repo}`)}`);
+        router.push(`/house?repo=${encodeURIComponent(`${ref.owner}/${ref.repo}`)}&fresh=1`);
       }}
     >
       <div className="flex flex-col gap-2 sm:flex-row">

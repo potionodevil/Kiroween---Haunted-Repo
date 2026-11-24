@@ -111,7 +111,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
                 @{viewer.login}{viewer.owner ? " · owner" : ""}
               </button>
             ) : (
-              <a href={loginHref(`/house?${q}`)} style={{ ...headerLink, borderColor: "#F2B544", color: "#F2B544" }}>Log in with GitHub</a>
+              <a href={loginHref(`/house?${q}&fresh=1`)} style={{ ...headerLink, borderColor: "#F2B544", color: "#F2B544" }}>Log in with GitHub</a>
             ))}
             <button type="button" onClick={() => setTour(true)} aria-label="Show the tour" title="Show the tour" style={{ ...headerLink, width: 44, padding: 0, justifyContent: "center", background: "transparent", cursor: "pointer", fontWeight: 800 }}>?</button>
             <Link href={`/hunt?${q}`} style={headerLink}>Live hunt</Link>

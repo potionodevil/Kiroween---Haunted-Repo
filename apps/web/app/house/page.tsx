@@ -6,8 +6,8 @@ export const metadata: Metadata = { title: "The haunted house · Haunted Repo" }
 export default async function HousePage({
   searchParams,
 }: {
-  searchParams: Promise<{ repo?: string; demo?: string; cached?: string }>;
+  searchParams: Promise<{ repo?: string; demo?: string; fresh?: string }>;
 }) {
-  const { repo, demo, cached } = await searchParams;
-  return <ScanGate view="house" repo={repo ?? null} demo={demo === "1"} useCache={cached === "1"} />;
+  const { repo, demo, fresh } = await searchParams;
+  return <ScanGate view="house" repo={repo ?? null} demo={demo === "1"} useCache={fresh !== "1"} />;
 }

@@ -104,7 +104,7 @@ export function Landing() {
       setError("That does not look like a GitHub repo");
       return;
     }
-    router.push(`/house?repo=${encodeURIComponent(`${ref.owner}/${ref.repo}`)}`);
+    router.push(`/house?repo=${encodeURIComponent(`${ref.owner}/${ref.repo}`)}&fresh=1`);
   };
 
   const face = (k: Card, back = false): CSSProperties => ({ background: back ? "#1C1229" : "#22172F", border: `3px solid ${k[3]}`, boxShadow: "inset 0 0 0 3px #160E22, 0 18px 40px #00000066" });

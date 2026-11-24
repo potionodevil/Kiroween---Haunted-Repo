@@ -65,6 +65,12 @@ export function ScanGate({ repo, demo, useCache = false, view, id }: Props) {
       const result = await fetchScan(repo, demo);
       saveResult(result);
       setState({ status: "done", result });
+      // Drop fresh=1 so going back or switching pages reuses this scan instead of scanning again.
+      const u = new URL(window.location.href);
+      if (u.searchParams.has("fresh")) {
+        u.searchParams.delete("fresh");
+        window.history.replaceState(window.history.state, "", u.toString());
+      }
       return result;
     } catch (e) {
       const message = e instanceof Error && e.message !== "Failed to fetch"

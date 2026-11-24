@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono, Pirata_One } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { SideDecor } from "@/components/SideDecor";
+import { SideNav } from "@/components/SideNav";
 
 const display = Pirata_One({ weight: "400", subsets: ["latin"], variable: "--ff-display" });
 const text = Bricolage_Grotesque({ subsets: ["latin"], variable: "--ff-text" });
@@ -18,6 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <SideDecor />
+        <Suspense fallback={null}>
+          <SideNav />
+        </Suspense>
       </body>
     </html>
   );
