@@ -12,6 +12,7 @@ import { AttackPath } from "@/components/ai/AttackPath";
 import { ScanTerminal, type PrState } from "./ScanTerminal";
 import { Onboarding, useFirstVisit } from "./Onboarding";
 import { FocusCard } from "./FocusCard";
+import { HouseRoom } from "./HouseRoom";
 import { loginHref, logout, useViewer } from "@/lib/client/viewer";
 
 type Filter = "all" | CreatureKind;
@@ -125,6 +126,8 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           </h1>
           <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature for the fix, click it to bring it closer. Bigger creature, bigger risk.</p>
         </div>
+
+        <HouseRoom findings={alive} total={alive.length} onOpen={(x, from) => setFocus({ id: x.id, from })} />
 
         <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
           <section
