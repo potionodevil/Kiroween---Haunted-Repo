@@ -70,9 +70,23 @@ export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fi
   const [side, setSide] = useState<"right" | "left">("right");
   const snippet = useSnippet(raw, repo, gitRef, demo, hot);
   const f = withFix(raw, snippet);
+  const [place, setPlace] = useState<CSSProperties>({});
+  // The popup is fixed to the window: beside the card, moved up when it would leave the bottom, never taller than the screen.
   const enter = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
-    setSide(r.right + 440 > window.innerWidth ? "left" : "right");
+    const right = r.right + 440 <= window.innerWidth;
+    const h = Math.min(600, window.innerHeight - 24);
+    const top = Math.max(12, Math.min(r.top - 6, window.innerHeight - h - 12));
+    const arrow = Math.max(20, Math.min(r.top + 40 - top, h - 30));
+    setSide(right ? "right" : "left");
+    setPlace({
+      position: "fixed",
+      top,
+      maxHeight: h,
+      overflowY: "auto",
+      ...(right ? { left: r.right + 18, right: "auto" } : { right: window.innerWidth - r.left + 18, left: "auto" }),
+      "--arrow": `${arrow}px`,
+    } as unknown as CSSProperties);
     setHot(true);
   };
   const L = LOOK[f.severity];
@@ -127,6 +141,7 @@ export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fi
       {/* Hover popup: the fix, a preview of the change, and one click to put it in the repo. */}
       <div
         className="fixpop"
+        style={place}
         role="group"
         aria-label={`Fix for ${f.title}`}
         onClick={(e) => {

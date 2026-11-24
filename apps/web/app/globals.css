@@ -400,3 +400,9 @@ body:has(.landing) .sidedecor { display: none !important; }
 .focus-info .fi-panel { border: 0; border-radius: 0; background: transparent; padding: 16px 18px; overflow: auto; flex: 1 1 auto; min-height: 220px; animation: hr-fade .2s ease; }
 .fi-actions { padding: 12px 18px; border-top: 1px solid #33244A; background: #1C1229; }
 .fi-actions p { margin: 8px 0 0; }
+
+/* Popup fixed to the window: arrow follows the card, an invisible bridge keeps hover across the gap */
+.cc .fixpop::before { top: var(--arrow, 40px); }
+.fixpop::after { content: ""; position: absolute; top: 0; bottom: 0; width: 22px; }
+.cc-right .fixpop::after { left: -22px; }
+.cc-left .fixpop::after { right: -22px; }
