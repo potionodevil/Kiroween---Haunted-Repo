@@ -1,12 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { parseRepo, type CreatureKind } from "@haunted/core";
 import { Sprite } from "@/components/Sprite";
+import { methodFor } from "@/lib/measure";
 
 /** Trading card data, from the design kit. */
-const K: [CreatureKind, string, string, string, string, number, string, string, string, string][] = [
+type Card = [CreatureKind, string, string, string, string, number, string, string, string, string];
+const K: Card[] = [
   ["ghost", "Ghost", "Leaked secrets", "#F3ECDD", "#F3ECDD55", 5, "Guided ritual", "API keys, tokens and passwords in any of the last 300 commits, even in files you deleted long ago.", "sk_live_••••4f2a in config/payments.js, commit a3f91c2", "Revoke the key, move it to an env variable, rewrite history, install the guard."],
   ["vampire", "Vampire", "Vulnerable dependencies", "#E07A7E", "#C8464A55", 4, "Auto-fix", "Packages in your lockfile with known advisories, checked against the OSV database.", "lodash 4.17.20 via express-validator, GHSA-35jh", "Smallest safe upgrade in the lockfile, opened as a pull request."],
   ["spider", "Spider", "Insecure code", "#C9A6FF", "#6E50964D", 5, "Proof test", "Code that trusts input it should not: SQL strings, eval, innerHTML, disabled TLS checks.", "`SELECT * FROM orders WHERE id = ${id}` in src/orders.ts:42", "Parameterized query plus a test that fails before and passes after."],
@@ -48,7 +50,10 @@ const DIM = "#9C8FAE";
 
 export function Landing() {
   const router = useRouter();
-  const [flipped, setFlipped] = useState<Record<string, boolean>>({});
+  // Clicked card: flies to the front as a popup, then turns to its back.
+  const [open, setOpen] = useState<{ i: number; from: DOMRect } | null>(null);
+  const [turned, setTurned] = useState(false);
+  const popRef = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState<Record<string, boolean>>({});
   const [moon, setMoon] = useState(0);
   const [swarm, setSwarm] = useState(false);
@@ -100,6 +105,75 @@ export function Landing() {
     }
     router.push(`/house?repo=${encodeURIComponent(`${ref.owner}/${ref.repo}`)}`);
   };
+
+  const face = (k: Card, back = false): CSSProperties => ({ background: back ? "#1C1229" : "#22172F", border: `3px solid ${k[3]}`, boxShadow: "inset 0 0 0 3px #160E22, 0 18px 40px #00000066" });
+  const front = (k: Card, i: number) => {
+    const [kind, name, what, accent, glow, danger, fixType] = k;
+    return (
+      <>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "14px 16px 0" }}>
+          <span className="font-display" style={{ fontSize: 30, lineHeight: 1 }}>{name}</span>
+          <span style={{ fontSize: 12, color: MUTED }}>No. {String(i + 1).padStart(2, "0")}</span>
+        </div>
+        <div style={{ margin: "10px 12px 0", flex: 1, borderRadius: 10, border: "2px solid #45345E", background: "#1C1229 url(/art/wallpaper.png) repeat 0 0/96px 96px", imageRendering: "pixelated", position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 18, overflow: "hidden" }}>
+          <div style={{ position: "absolute", left: "50%", bottom: 8, width: "70%", height: 22, marginLeft: "-35%", borderRadius: "50%", background: `radial-gradient(ellipse,${glow} 0%,transparent 70%)` }} />
+          <Sprite kind={kind} className="relative" />
+        </div>
+        <div style={{ padding: "12px 16px 14px" }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: accent }}>{what}</div>
+          <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: MUTED }}>
+            <span>
+              Danger <span style={{ letterSpacing: 2, color: "#F2B544" }}>{"\u25CF".repeat(danger) + "\u25CB".repeat(5 - danger)}</span>
+            </span>
+            <span>{fixType}</span>
+          </div>
+        </div>
+      </>
+    );
+  };
+  const label: CSSProperties = { marginTop: 14, fontSize: 12, fontWeight: 800, letterSpacing: 0.5, textTransform: "uppercase", color: "#F2B544" };
+  const backSide = (k: Card) => {
+    const [kind, name, , accent, , , , desc, example, fix] = k;
+    return (
+      <div style={{ padding: 20, overflowY: "auto" }}>
+        <div className="font-display" style={{ fontSize: 32, lineHeight: 1, color: accent }}>{name}</div>
+        <p style={{ margin: "10px 0 0", fontSize: 14.5, lineHeight: 1.5, color: "#F3ECDD" }}>{desc}</p>
+        <div style={label}>How we find it</div>
+        <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.45, color: MUTED }}>{methodFor(kind)}</p>
+        <div style={label}>Example finding</div>
+        <div className="font-mono" style={{ marginTop: 4, fontSize: 11.5, lineHeight: 1.45, background: "#160E22", border: "1px solid #33244A", borderRadius: 8, padding: 8, color: MUTED, wordBreak: "break-word" }}>{example}</div>
+        <div style={label}>How it is fixed</div>
+        <div style={{ marginTop: 4, fontSize: 14, lineHeight: 1.45, color: "#9FD6A8" }}>{fix}</div>
+      </div>
+    );
+  };
+
+  // Fly the popup card in from the clicked grid card, then turn it over.
+  useLayoutEffect(() => {
+    const el = popRef.current;
+    if (!open || !el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduced) {
+      const to = el.getBoundingClientRect();
+      const dx = open.from.left + open.from.width / 2 - (to.left + to.width / 2);
+      const dy = open.from.top + open.from.height / 2 - (to.top + to.height / 2);
+      el.animate(
+        [
+          { transform: `translate(${dx}px, ${dy}px) scale(${open.from.width / to.width})` },
+          { transform: "translate(0, -14px) scale(1.03)", offset: 0.75 },
+          { transform: "none" },
+        ],
+        { duration: 520, easing: "cubic-bezier(.2,.8,.2,1)" },
+      );
+    }
+    const t = window.setTimeout(() => setTurned(true), reduced ? 0 : 560);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
     <div className="landing" style={{ background: "#160E22", color: "#F3ECDD" }}>
@@ -236,60 +310,26 @@ export function Landing() {
         </p>
         <div className="tgrid" style={{ marginTop: 48 }}>
           {K.map((k, i) => {
-            const [kind, name, what, accent, glow, danger, fixType, desc, example, fix] = k;
-            const on = Boolean(flipped[kind]);
-            const face = (bg: string): CSSProperties => ({ background: bg, border: `3px solid ${accent}`, boxShadow: "inset 0 0 0 3px #160E22, 0 18px 40px #00000066" });
+            const [kind, name, what] = k;
             return (
               <button
                 key={kind}
                 type="button"
                 className="tcard"
-                onClick={() => {
-                  setFlipped((f) => {
-                    const n = { ...f };
-                    if (n[kind]) delete n[kind];
-                    else n[kind] = true;
-                    return n;
-                  });
+                onClick={(e) => {
                   setSeen((s) => ({ ...s, [kind]: true }));
+                  setTurned(false);
+                  setOpen({ i, from: e.currentTarget.getBoundingClientRect() });
                 }}
                 onMouseMove={tilt}
                 onMouseLeave={untilt}
-                aria-pressed={on}
-                aria-label={`${name}, ${what}. ${on ? `${desc} Fix: ${fix}` : "Show the back of the card."}`}
+                aria-haspopup="dialog"
+                aria-label={`${name}, ${what}. Open the card.`}
               >
-                <div className="tinner" style={{ "--flip": on ? "180deg" : "0deg" } as CSSProperties}>
-                  <div className="tface" style={face("#22172F")}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "14px 16px 0" }}>
-                      <span className="font-display" style={{ fontSize: 30, lineHeight: 1 }}>{name}</span>
-                      <span style={{ fontSize: 12, color: MUTED }}>No. {String(i + 1).padStart(2, "0")}</span>
-                    </div>
-                    <div style={{ margin: "10px 12px 0", flex: 1, borderRadius: 10, border: "2px solid #45345E", background: "#1C1229 url(/art/wallpaper.png) repeat 0 0/96px 96px", imageRendering: "pixelated", position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 18, overflow: "hidden" }}>
-                      <div style={{ position: "absolute", left: "50%", bottom: 8, width: "70%", height: 22, marginLeft: "-35%", borderRadius: "50%", background: `radial-gradient(ellipse,${glow} 0%,transparent 70%)` }} />
-                      <Sprite kind={kind} className="relative" />
-                    </div>
-                    <div style={{ padding: "12px 16px 14px" }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: accent }}>{what}</div>
-                      <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: MUTED }}>
-                        <span>
-                          Danger <span style={{ letterSpacing: 2, color: "#F2B544" }}>{"●".repeat(danger) + "○".repeat(5 - danger)}</span>
-                        </span>
-                        <span>{fixType}</span>
-                      </div>
-                    </div>
+                <div className="tinner">
+                  <div className="tface" style={face(k)}>
+                    {front(k, i)}
                     <div className="holo" />
-                  </div>
-                  <div className="tface tback" style={face("#1C1229")}>
-                    <div style={{ padding: 18 }}>
-                      <div className="font-display" style={{ fontSize: 28, lineHeight: 1 }}>{name}</div>
-                      <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.45, color: "#F3ECDD" }}>{desc}</p>
-                      <div style={{ marginTop: 12, fontSize: 12, color: DIM }}>Example finding</div>
-                      <div className="font-mono" style={{ marginTop: 4, fontSize: 11, lineHeight: 1.45, background: "#160E22", border: "1px solid #33244A", borderRadius: 8, padding: 7, color: MUTED, wordBreak: "break-word" }}>
-                        {example}
-                      </div>
-                      <div style={{ marginTop: 12, fontSize: 12, color: DIM }}>How it is fixed</div>
-                      <div style={{ marginTop: 4, fontSize: 13, lineHeight: 1.4, color: "#9FD6A8" }}>{fix}</div>
-                    </div>
                   </div>
                 </div>
               </button>
@@ -365,6 +405,29 @@ power/   (Kiro Power + MCP)`}
           {confess ? "Okay, one. It was a test key." : "No ghosts were harmed. Only revoked."}
         </button>
       </footer>
+      {open && (() => {
+        const k = K[open.i]!;
+        return (
+          <div className="focus-backdrop" onClick={() => setOpen(null)}>
+            <div role="dialog" aria-modal="true" aria-label={`${k[1]} card`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, margin: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <div ref={popRef} style={{ width: "min(380px, 86vw)" }}>
+                <button type="button" className="tcard tcard-pop" autoFocus onClick={() => setTurned((t) => !t)} aria-label={turned ? `${k[1]}: ${k[7]} Fix: ${k[9]}. Turn to the front.` : `${k[1]}. Turn the card over.`}>
+                  <div className="tinner" style={{ "--flip": turned ? "180deg" : "0deg" } as CSSProperties}>
+                    <div className="tface" style={face(k)}>{front(k, open.i)}</div>
+                    <div className="tface tback" style={face(k, true)}>{backSide(k)}</div>
+                  </div>
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, color: MUTED }}>
+                <span>Click the card to turn it.</span>
+                <button type="button" onClick={() => setOpen(null)} style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "1px solid #45345E", background: "transparent", color: "#F3ECDD", cursor: "pointer" }}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

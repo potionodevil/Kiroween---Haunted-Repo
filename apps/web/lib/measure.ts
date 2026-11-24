@@ -14,6 +14,9 @@ const METHOD: Record<CreatureKind, string> = {
   mummy: "Compared README, SECURITY.md and agent files with what package.json and the code actually say.",
 };
 
+/** The detection method for a creature kind, in plain words. */
+export const methodFor = (k: CreatureKind): string => METHOD[k];
+
 export interface Measurement {
   method: string;
   facts: [string, string][];
