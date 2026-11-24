@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import type { Finding } from "@haunted/core";
 import { KIND_COLOR, KIND_LABEL, SEVERITY_LABEL } from "@/lib/sprites";
 import { measurement } from "@/lib/measure";
@@ -8,6 +8,9 @@ import { Sprite } from "@/components/Sprite";
 import { badgeStyle } from "./CreatureCard";
 import type { PrState } from "./ScanTerminal";
 import { useSnippet, withFix } from "@/lib/client/snippet";
+
+type Tab = "code" | "why" | "how" | "fix";
+const TABS: [Tab, string][] = [["code", "Where it is"], ["why", "What it means"], ["how", "How we measured it"], ["fix", "The fix"]];
 
 /**
  * A creature card that flies from its place in the grid to the front, framed like a trading card.
@@ -39,6 +42,7 @@ export function FocusCard({
   demo: boolean;
 }) {
   const snippet = useSnippet(raw, repo, gitRef, demo, true);
+  const [tab, setTab] = useState<Tab>("code");
   const f = withFix(raw, snippet);
   const cardRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -98,8 +102,15 @@ export function FocusCard({
         </div>
 
         <div className="focus-info" style={frame}>
-          <section>
-            <h3>Where it is</h3>
+          <div role="tablist" aria-label="About this creature" className="fi-tabs">
+            {TABS.map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? "fi-tab fi-on" : "fi-tab"} onClick={() => setTab(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {tab === "code" && (
+          <section className="fi-panel">
             <div className="code-win" style={{ marginTop: 8 }}>
               <div className="code-bar font-mono">
                 <span>{f.line ? `${f.file}:${f.line}` : f.file}</span>
@@ -124,13 +135,15 @@ export function FocusCard({
               )}
             </div>
           </section>
-          <section>
-            <h3>What it means</h3>
+          )}
+          {tab === "why" && (
+          <section className="fi-panel">
             <p>{f.message}</p>
             {f.blastRadius && <p style={{ color: "#F2B544" }}>{f.blastRadius}</p>}
           </section>
-          <section>
-            <h3>How we measured it</h3>
+          )}
+          {tab === "how" && (
+          <section className="fi-panel">
             <p>{m.method}</p>
             <dl className="font-mono">
               {m.facts.map(([k, v]) => (
@@ -148,8 +161,9 @@ export function FocusCard({
               </ul>
             )}
           </section>
-          <section>
-            <h3>The fix</h3>
+          )}
+          {tab === "fix" && (
+          <section className="fi-panel">
             <p>{f.fix}</p>
             {canFix && f.patch && (
               <pre className="font-mono code-lines" style={{ margin: "10px 0 0", borderRadius: 10, background: "#0F0918", border: "1px solid #33244A", maxHeight: 200 }}>
@@ -164,7 +178,10 @@ export function FocusCard({
               </pre>
             )}
             {canFix && <p style={{ fontSize: 13, color: "#9C8FAE" }}>Opens a pull request. The changed line gets a haunted-repo comment.</p>}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+          </section>
+          )}
+          <div className="fi-actions">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {canFix &&
                 (fixState?.url ? (
                   <a className="fixbtn" style={{ width: "auto", padding: "0 16px", marginTop: 0, background: "#9FD6A8", color: "#0F2414" }} href={fixState.url} target="_blank" rel="noreferrer">
@@ -185,7 +202,7 @@ export function FocusCard({
               </button>
             </div>
             {fixState?.tone === "bad" && !fixState.url && <p role="alert" style={{ color: "#FF9B8A" }}>{fixState.text}</p>}
-          </section>
+          </div>
         </div>
       </div>
     </div>
