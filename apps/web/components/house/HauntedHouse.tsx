@@ -11,6 +11,7 @@ import { GhostMark } from "./GhostMark";
 import { AttackPath } from "@/components/ai/AttackPath";
 import { ScanTerminal, type PrState } from "./ScanTerminal";
 import { Onboarding, useFirstVisit } from "./Onboarding";
+import { FocusCard } from "./FocusCard";
 import { loginHref, logout, useViewer } from "@/lib/client/viewer";
 
 type Filter = "all" | CreatureKind;
@@ -48,6 +49,8 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
 
   const viewer = useViewer(demo ? null : result.repo);
   const [tour, setTour] = useFirstVisit();
+  const [focus, setFocus] = useState<{ id: string; from: DOMRect } | null>(null);
+  const focused = focus ? findings.find((f) => f.id === focus.id) : undefined;
   const [pr, setPr] = useState<PrState | null>(null);
   const [cardFix, setCardFix] = useState<Record<string, PrState>>({});
   // Auto-fix as a pull request: every changed spot gets a "haunted-repo:" comment (see /api/fix-pr).
@@ -120,7 +123,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
           <h1 style={{ margin: 0, fontSize: 30, letterSpacing: -0.5 }}>
             {alive.length === 0 ? "The house is quiet" : `${alive.length} creature${alive.length === 1 ? "" : "s"} haunt this repo`}
           </h1>
-          <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature to fix it in your repo. Bigger creature, bigger risk.</p>
+          <p style={{ margin: 0, color: "#9C8FAE", fontSize: 14 }}>Hover a creature for the fix, click it to bring it closer. Bigger creature, bigger risk.</p>
         </div>
 
         <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
@@ -130,7 +133,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             style={{ flex: "999 1 620px", minWidth: 0, border: "1px solid #33244A", borderRadius: 20, padding: 24, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}
           >
             {visible.map((f) => (
-              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} onFix={(x) => void fixOne(x)} fixState={cardFix[f.id]} ritualHref={`/exorcism/${f.id}?${q}`} />
+              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} onFix={(x) => void fixOne(x)} fixState={cardFix[f.id]} ritualHref={`/exorcism/${f.id}?${q}`} onOpen={(x, from) => setFocus({ id: x.id, from })} />
             ))}
             {visible.length === 0 && <p style={{ color: MUTED }}>No creatures of this kind.</p>}
           </section>
@@ -188,6 +191,18 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
       </main>
 
       <Onboarding open={tour} onClose={() => setTour(false)} />
+      {focused && focus && (
+        <FocusCard
+          finding={focused}
+          from={focus.from}
+          banished={banished.has(focused.id)}
+          onClose={() => setFocus(null)}
+          onFix={(x) => void fixOne(x)}
+          fixState={cardFix[focused.id]}
+          ritualHref={`/exorcism/${focused.id}?${q}`}
+          revealMasked={demo || Boolean(viewer?.owner)}
+        />
+      )}
       <dialog ref={dialogRef} className="m-auto w-[min(640px,92vw)] rounded-2xl border border-dust bg-crypt p-0 text-bone backdrop:bg-plum-night/80">
         <div className="p-5">
           <h2 className="text-lg font-bold">Laid to rest</h2>

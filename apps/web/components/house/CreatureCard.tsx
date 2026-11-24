@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { commentFor, type Finding, type Severity } from "@haunted/core";
-import { KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
+import { KIND_COLOR, KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
 import type { PrState } from "./ScanTerminal";
 
@@ -14,6 +14,8 @@ interface Props {
   onFix?: (f: Finding) => void;
   fixState?: PrState;
   ritualHref?: string;
+  /** Click: fly this card to the front. */
+  onOpen?: (f: Finding, from: DOMRect) => void;
 }
 
 /** Card colors per severity, from the design kit. */
@@ -58,7 +60,7 @@ function preview(f: Finding): { sign: string; text: string }[] {
 
 const SIGN: Record<string, string> = { "+": "#BDEBC5", "-": "#FF9B8A", " ": "#9C8FAE" };
 
-export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixState, ritualHref }: Props) {
+export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixState, ritualHref, onOpen }: Props) {
   const L = LOOK[f.severity];
   const canFix = Boolean(f.autoFixable && f.patch && f.kind !== "ghost" && onFix);
   const lines = canFix ? preview(f) : [];
@@ -70,11 +72,15 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
       <button
         type="button"
         className="card3d"
-        onClick={() => onPick(f.id)}
+        onClick={(e) => {
+          onPick(f.id);
+          onOpen?.(f, e.currentTarget.getBoundingClientRect());
+        }}
         onMouseEnter={() => onPick(f.id)}
         onFocus={() => onPick(f.id)}
         aria-label={accessibleName(f, banished)}
         aria-pressed={pinned}
+        aria-haspopup="dialog"
         style={{
           width: "100%",
           textAlign: "left",
@@ -100,9 +106,22 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
       </button>
 
       {/* Hover popup: the fix, a preview of the change, and one click to put it in the repo. */}
-      <div className="fixpop" role="group" aria-label={`Fix for ${f.title}`}>
+      <div
+        className="fixpop"
+        role="group"
+        aria-label={`Fix for ${f.title}`}
+        style={{ "--kc": KIND_COLOR[f.kind] } as CSSProperties}
+        onClick={(e) => {
+          // Clicking the popup (not its buttons or links) brings the card to the front.
+          if ((e.target as HTMLElement).closest("button, a")) return;
+          const card = (e.currentTarget.previousElementSibling as HTMLElement | null)?.getBoundingClientRect();
+          if (card) onOpen?.(f, card);
+        }}
+      >
+        <span className="fc-corner fc-tl" />
+        <span className="fc-corner fc-tr" />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.4, color: "#F2B544", textTransform: "uppercase" }}>{KIND_LABEL[f.kind].one}</span>
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.4, color: KIND_COLOR[f.kind], textTransform: "uppercase" }}>{KIND_LABEL[f.kind].one}</span>
           <span className="font-mono" style={{ marginLeft: "auto", fontSize: 11, color: "#9C8FAE" }}>{f.rule}</span>
         </div>
         <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.45 }}>{f.fix}</p>
@@ -133,7 +152,7 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
           <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "#9C8FAE" }}>No safe auto-fix. The detail panel shows how to fix it by hand.</p>
         )}
         {fixState?.tone === "bad" && !fixState.url && <p role="alert" style={{ margin: "8px 0 0", fontSize: 12.5, color: "#FF9B8A" }}>{fixState.text}</p>}
-        {canFix && !fixState && <p style={{ margin: "8px 0 0", fontSize: 11.5, color: "#9C8FAE" }}>Opens a pull request. The changed line gets a haunted-repo comment.</p>}
+        <p style={{ margin: "8px 0 0", fontSize: 11.5, color: "#9C8FAE" }}>{canFix && !fixState ? "Opens a pull request. The changed line gets a haunted-repo comment. " : ""}Click for how we found it.</p>
       </div>
     </div>
   );

@@ -253,14 +253,16 @@ body {
 .fixpop {
   position: absolute; left: -10px; right: -10px; top: calc(100% - 14px);
   min-width: 260px; padding: 14px; border-radius: 14px;
-  background: #22172F; border: 2px solid #F2B544; color: #F3ECDD;
-  box-shadow: 0 22px 44px #000000aa;
+  background: linear-gradient(160deg, #2a1d3b, #1C1229); border: 2px solid var(--kc, #F2B544); color: #F3ECDD; cursor: pointer;
+  box-shadow: 0 0 0 4px #160E22, 0 0 0 5px color-mix(in srgb, var(--kc, #F2B544) 45%, transparent), 0 22px 44px #000000aa;
   opacity: 0; transform: translateY(10px) scale(.97); pointer-events: none;
   transition: opacity .16s ease, transform .16s ease;
 }
+.fixpop .fc-corner { width: 8px; height: 8px; box-shadow: none; }
+.fixpop .fc-tl { top: -5px; left: -5px; } .fixpop .fc-tr { top: -5px; right: -5px; }
 .fixpop::before {
   content: ""; position: absolute; top: -9px; left: 50%; width: 14px; height: 14px; margin-left: -7px;
-  background: #22172F; border-left: 2px solid #F2B544; border-top: 2px solid #F2B544; transform: rotate(45deg);
+  background: #2a1d3b; border-left: 2px solid var(--kc, #F2B544); border-top: 2px solid var(--kc, #F2B544); transform: rotate(45deg);
 }
 .cc:hover .fixpop, .cc:focus-within .fixpop, .cc-open .fixpop { opacity: 1; transform: none; pointer-events: auto; }
 .fixbtn {
@@ -302,3 +304,29 @@ body {
 }
 /* The landing has its own full-width art; side decorations would sit on the moon. */
 body:has(.landing) .sidedecor { display: none !important; }
+
+/* Focus card: a creature flies to the front, framed like a trading card */
+.focus-backdrop { position: fixed; inset: 0; z-index: 60; background: #0b0612cc; backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 16px; animation: hr-fade .25s ease; }
+@keyframes hr-fade { from { opacity: 0; } }
+.focus-wrap { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: center; max-width: 980px; width: 100%; perspective: 1200px; }
+.focus-card {
+  position: relative; flex: 0 0 320px; padding: 22px; border-radius: 18px; color: #F3ECDD;
+  background: linear-gradient(160deg, #2a1d3b, #160E22 70%);
+  border: 3px solid var(--kc);
+  box-shadow: 0 0 0 6px #160E22, 0 0 0 8px color-mix(in srgb, var(--kc) 55%, transparent), 0 30px 70px #000000cc, 0 0 60px color-mix(in srgb, var(--kc) 30%, transparent);
+  transform-style: preserve-3d;
+}
+.focus-card::after { content: ""; position: absolute; inset: 7px; border: 1px dashed color-mix(in srgb, var(--kc) 50%, transparent); border-radius: 12px; pointer-events: none; }
+.fc-corner { position: absolute; width: 12px; height: 12px; background: var(--kc); box-shadow: 4px 4px 0 #160E22; image-rendering: pixelated; }
+.fc-tl { top: -7px; left: -7px; } .fc-tr { top: -7px; right: -7px; } .fc-bl { bottom: -7px; left: -7px; } .fc-br { bottom: -7px; right: -7px; }
+.focus-info { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 14px; animation: hr-rise-in .45s .2s ease both; }
+@keyframes hr-rise-in { from { opacity: 0; transform: translateY(18px); } }
+.focus-info section { background: #22172F; border: 1px solid #33244A; border-radius: 14px; padding: 16px 18px; }
+.focus-info h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: .6px; text-transform: uppercase; color: #F2B544; }
+.focus-info p { margin: 6px 0 0; font-size: 15px; line-height: 1.55; color: #E6DCEB; }
+.focus-info dl { margin: 12px 0 0; display: grid; gap: 4px; font-size: 12.5px; }
+.focus-info dl div { display: flex; gap: 10px; }
+.focus-info dt { width: 90px; flex: none; color: #9C8FAE; }
+.focus-info dd { margin: 0; color: #F3ECDD; word-break: break-word; }
+.focus-info ul { margin: 10px 0 0; padding-left: 18px; font-size: 12.5px; color: #C2B6CF; }
+@media (prefers-reduced-motion: reduce) { .focus-backdrop, .focus-info { animation: none; } }
