@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { requestBadgePr, requestFixPr, type PrResult } from "@/lib/client/pr";
 import { CREATURE_KINDS, autopsyMarkdown, cycloneDx, scoreLabel, score as calcScore, type Finding, type Severity } from "@haunted/core";
 import type { GateContext } from "@/components/ScanGate";
 import { useBanished } from "@/lib/client/useBanished";
@@ -24,7 +25,9 @@ function download(name: string, text: string, type: string) {
 /** Feature 20 autopsy report (print-ready page + Markdown), 21 SBOM, 19 badge. */
 export function Report({ ctx }: { ctx: GateContext }) {
   const { result, demo } = ctx;
-  const { banished } = useBanished(result.repo);
+  const { banished, banish } = useBanished(result.repo);
+  const [badgePr, setBadgePr] = useState<PrResult | null>(null);
+  const [fixPr, setFixPr] = useState<PrResult | null>(null);
   const q = scanQuery(result.repo, demo);
   const open = useMemo(() => result.findings.filter((f) => !banished.has(f.id)), [result.findings, banished]);
   const liveScore = calcScore(result.findings, banished);
@@ -32,6 +35,37 @@ export function Report({ ctx }: { ctx: GateContext }) {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const badgeUrl = `${origin}/api/badge?${demo ? "demo=1" : `repo=${encodeURIComponent(result.repo)}`}`;
   const badgeMd = `[![Haunting score](${badgeUrl})](${origin}/house?${q})`;
+
+  const fixable = open.filter((f) => f.autoFixable && f.patch && f.kind !== "ghost");
+  const here = `/report?${q}&cached=1`;
+  const applyBadge = async () => {
+    if (demo) return setBadgePr({ tone: "ok", text: "Pull request #49 opened (demo): badge added under the README title" });
+    setBadgePr({ tone: "run", text: "Opening a pull request…" });
+    setBadgePr(await requestBadgePr(result.repo, here));
+  };
+  const autoFix = async () => {
+    if (fixable.length === 0) return;
+    if (demo) {
+      banish(fixable.map((f) => f.id));
+      return setFixPr({ tone: "ok", text: `Pull request #48 opened (demo) · ${fixable.length} fixes, each marked in the code` });
+    }
+    setFixPr({ tone: "run", text: "Opening a pull request…" });
+    const r = await requestFixPr(result.repo, fixable, here);
+    if (r.tone === "ok") banish(fixable.map((f) => f.id));
+    setFixPr(r);
+  };
+  const prLine = (r: PrResult | null) =>
+    r && (
+      <p role="status" style={{ margin: "10px 0 0", fontSize: 14, color: r.tone === "bad" ? "#FF9B8A" : r.tone === "ok" ? "#BDEBC5" : "#F2B544" }}>
+        {r.url ? (
+          <a href={r.url} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>
+            {r.text} ↗
+          </a>
+        ) : (
+          r.text
+        )}
+      </p>
+    );
 
   const th = { textAlign: "left" as const, padding: "8px 10px", borderBottom: "1px solid #45345E", fontSize: 13, color: "#C2B6CF" };
   const td = { padding: "8px 10px", borderBottom: "1px solid #33244A", fontSize: 14, verticalAlign: "top" as const };
@@ -42,6 +76,9 @@ export function Report({ ctx }: { ctx: GateContext }) {
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 32px", display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
           <Link href={`/house?${q}&cached=1`} style={{ color: "#C2B6CF", textDecoration: "none" }}>‹ Back to the haunted house</Link>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <button type="button" onClick={() => void autoFix()} disabled={fixable.length === 0 || fixPr?.tone === "run"} title="One pull request, every change marked with a haunted-repo comment" style={{ height: 44, padding: "0 16px", borderRadius: 10, border: "1px solid #9FD6A8", background: "transparent", color: fixable.length ? "#9FD6A8" : "#6E6182", fontWeight: 700, cursor: fixable.length ? "pointer" : "default" }}>
+              {fixPr?.tone === "run" ? "Opening a pull request…" : `Auto-fix ${fixable.length} in a PR`}
+            </button>
             <button type="button" onClick={() => window.print()} style={{ height: 44, padding: "0 16px", borderRadius: 10, border: 0, background: "#F2B544", color: "#241604", fontWeight: 700, cursor: "pointer" }}>
               Export autopsy report (PDF)
             </button>
@@ -56,6 +93,7 @@ export function Report({ ctx }: { ctx: GateContext }) {
       </header>
 
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px 64px" }}>
+        <div className="no-print">{prLine(fixPr)}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <Sprite kind="skeleton" scale={0.6} paused />
           <div>
@@ -152,7 +190,12 @@ export function Report({ ctx }: { ctx: GateContext }) {
               {badgeMd}
             </code>
             <CopyButton text={badgeMd} />
+            <button type="button" onClick={() => void applyBadge()} disabled={badgePr?.tone === "run" || badgePr?.tone === "ok"} style={{ height: 36, padding: "0 14px", borderRadius: 8, border: 0, background: "#F2B544", color: "#241604", fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {badgePr?.tone === "run" ? "Opening…" : "Apply to README"}
+            </button>
           </div>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "#9C8FAE" }}>Apply opens a pull request that puts the badge under your README title.</p>
+          {prLine(badgePr)}
         </section>
       </main>
     </div>
