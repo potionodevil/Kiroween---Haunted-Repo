@@ -11,7 +11,7 @@ type StepStatus = "wait" | "run" | "pass" | "fail" | "skip";
 type Ev =
   | { t: "line"; tone: Tone; text: string }
   | { t: "step"; step: Step; status: Exclude<StepStatus, "wait"> }
-  | { t: "done"; build: string; test: string; failing: string[] }
+  | { t: "done"; build: string; test: string; failing: string[]; lang?: string }
   | { t: "error"; message: string };
 
 const COLOR: Record<Tone, string> = { ok: "#BDEBC5", bad: "#FF9B8A", warn: "#F2B544", dim: "#C2B6CF", cmd: "#F3ECDD" };
@@ -123,7 +123,17 @@ export function LiveSeance({ repo }: { repo: string }) {
       </section>
 
       <aside style={{ flex: "1 1 340px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <section aria-label="Séance steps" className="font-mono" style={{ background: "#22172F", border: "2px solid #33244A", borderRadius: 18, padding: 22, fontSize: 15 }}>
+        <section aria-label="Séance steps" className="font-mono seance-panel">
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <span className="flame" aria-hidden="true" />
+            <span className="font-display" style={{ fontSize: 24, color: "#F2B544", fontFamily: "var(--ff-display)" }}>The séance</span>
+            <span style={{ marginLeft: "auto", fontSize: 12, color: "#9C8FAE" }}>
+              {Object.values(steps).filter((x) => x === "pass" || x === "fail" || x === "skip").length}/4
+            </span>
+          </div>
+          <div aria-hidden="true" style={{ height: 4, borderRadius: 2, background: "#160E22", overflow: "hidden", marginBottom: 8 }}>
+            <div style={{ height: "100%", width: `${(Object.values(steps).filter((x) => x === "pass" || x === "fail" || x === "skip").length / 4) * 100}%`, background: "linear-gradient(90deg,#F2B544,#7FD6C9)", transition: "width .3s" }} />
+          </div>
           {STEPS.map(([id, label]) => (
             <div key={id} style={{ display: "flex", gap: 12, padding: "6px 0" }}>
               <span style={{ width: 18, color: MARK[steps[id]][1], fontWeight: 800 }}>{MARK[steps[id]][0]}</span>
@@ -160,7 +170,7 @@ export function LiveSeance({ repo }: { repo: string }) {
               <h2 style={{ margin: 0, fontSize: 22 }}>{banshee ? "A banshee screams" : "The spirits are calm"}</h2>
             </div>
             <p className="font-mono" style={{ margin: "10px 0 0", fontSize: 14, color: "#C2B6CF" }}>
-              build {done.build} · tests {done.test} · {secs()} s
+              {done.lang ? `${done.lang} · ` : ""}build {done.build} · tests {done.test} · {secs()} s
             </p>
             {done.failing.length > 0 && (
               <ul className="font-mono" style={{ margin: "12px 0 0", paddingLeft: 18, fontSize: 13, color: "#FF9B8A" }}>

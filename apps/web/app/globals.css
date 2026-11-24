@@ -378,3 +378,12 @@ body:has(.landing) .sidedecor { display: none !important; }
   body:has(.sidenav) { padding-bottom: 76px; }
 }
 @media print { .sidenav { display: none; } }
+
+/* Séance side panel stands out from the page: candle-lit gold frame and glow */
+.seance-panel { position: relative; padding: 22px; font-size: 15px; border-radius: 18px; color: #F3ECDD;
+  background: radial-gradient(120% 80% at 50% 0%, #3a2a1a 0%, #22172F 55%, #1C1229 100%);
+  border: 2px solid #F2B544; box-shadow: 0 0 0 5px #160E22, 0 0 0 6px #F2B54455, 0 0 40px #F2B54433, 0 24px 50px #000000aa; }
+.seance-panel::after { content: ""; position: absolute; inset: 6px; border: 1px dashed #F2B54444; border-radius: 13px; pointer-events: none; }
+
+/* Side navigation stands out: gold edge and candle glow */
+.sidenav { border-color: #F2B54488; box-shadow: 0 0 0 4px #160E22, 0 0 0 5px #F2B54433, 0 0 30px #F2B54422, 0 16px 40px #00000099; background: linear-gradient(180deg, #2a1d3b, #1C1229); }
