@@ -89,6 +89,7 @@ body {
   .fx { animation-timeline: --dolly; animation-fill-mode: both; animation-timing-function: linear; animation-duration: auto; }
   /* Longer ride: the room is fully visible on its own (55%-72%) before the last caption rises. */
   .facade { animation-name: hrdolly, hrout; animation-range: contain 0% contain 52%; }
+  .sky { animation-name: hrout; animation-range: contain 0% contain 52%; }
   .hall { animation-name: hrhall; animation-range: contain 30% contain 55%; }
   .cap1 { animation-name: hrout; animation-range: contain 0% contain 15%; }
   .cap2 { animation-name: hrcap; animation-range: contain 16% contain 42%; }
@@ -96,12 +97,12 @@ body {
 }
 @supports not (animation-timeline: view()) {
   .dolly { height: auto !important; }
-  .facade, .cap2 { display: none; }
+  .facade, .cap2, .sky { display: none; }
   .sticky-stage { position: relative !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fx, .walk, .fog, .doorglow { animation: none !important; }
-  .facade, .cap2 { display: none; }
+  .facade, .cap2, .sky { display: none; }
 }
 .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; }
 .tcard { position: relative; display: block; width: 100%; aspect-ratio: 5/7; padding: 0; border: 0; background: none; cursor: pointer; perspective: 1100px; font-family: inherit; color: inherit; --rx: 0deg; --ry: 0deg; --mx: 50; }
@@ -299,3 +300,5 @@ body {
   .sd-thread, .sd-bat, .flame, .lantern-glass, .loader-walk, .spin { animation: none !important; }
   .loader-walk { left: 20%; } .loader-walk + .loader-walk { left: 45%; } .loader-fly { left: 70%; }
 }
+/* The landing has its own full-width art; side decorations would sit on the moon. */
+body:has(.landing) .sidedecor { display: none !important; }

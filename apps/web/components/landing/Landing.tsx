@@ -102,7 +102,7 @@ export function Landing() {
   };
 
   return (
-    <div style={{ background: "#160E22", color: "#F3ECDD" }}>
+    <div className="landing" style={{ background: "#160E22", color: "#F3ECDD" }}>
       <header style={{ position: "relative", zIndex: 10, maxWidth: 1240, margin: "0 auto", padding: "26px 32px", display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "space-between" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "#F3ECDD" }}>
           <svg width="30" height="34" viewBox="0 0 34 38" aria-hidden="true">
@@ -129,8 +129,11 @@ export function Landing() {
             ))}
           </div>
 
-          <div aria-hidden="true" style={SCENE}>
-            <div className="lay l0" />
+          {/* Sky fades out with the facade, so the hallway behind it shows on its own. */}
+          <div aria-hidden="true" className="sky fx" style={{ position: "absolute", inset: 0 }}>
+            <div style={SCENE}>
+              <div className="lay l0" />
+            </div>
           </div>
           <div className="facade fx" style={{ position: "absolute", inset: 0, transformStyle: "preserve-3d" }}>
             <div style={{ ...SCENE, transformStyle: "preserve-3d" }}>
