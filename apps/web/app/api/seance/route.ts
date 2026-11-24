@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseRepo } from "@haunted/core";
 import { canPush, getSession, userApi } from "@/lib/auth";
-import { runSeance } from "@/lib/seance";
 import { guard } from "@/lib/guard";
 
 export const runtime = "nodejs";
@@ -25,6 +24,15 @@ export async function POST(req: Request) {
   const info = await userApi<{ default_branch?: string; size?: number }>(s.token, `/repos/${ref.owner}/${ref.repo}`);
   if ((info.data.size ?? 0) > 200_000) return NextResponse.json({ error: "This repo is over 200 MB. The séance table is too small." }, { status: 413 });
   const branch = info.data.default_branch ?? "main";
+
+  // Loaded on demand: a missing or broken sandbox package becomes a readable error, not a bare 500.
+  let runSeance: typeof import("@/lib/seance").runSeance;
+  try {
+    ({ runSeance } = await import("@/lib/seance"));
+  } catch {
+    console.error("seance: sandbox module failed to load");
+    return NextResponse.json({ error: "The sandbox could not start on this deployment." }, { status: 503 });
+  }
 
   const enc = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
