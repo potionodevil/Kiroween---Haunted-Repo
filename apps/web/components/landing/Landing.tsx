@@ -23,18 +23,19 @@ const K: Card[] = [
 
 const TOWER_LINES = ["I'm committed.", "Still in 47 commits. Help.", "Have you tried git filter-repo?", "Boo. Also, rotate your keys."];
 
+/** Hallway walkers: flyers above the wainscot (top < 400), walkers with feet on the floor (stage 880px, floor from 587px). */
 const WALKERS: { kind: CreatureKind; top: number; dur: number; delay: number }[] = [
-  { kind: "ghost", top: 476, dur: 24, delay: -4 },
-  { kind: "zombie", top: 470, dur: 32, delay: -18 },
-  { kind: "bat", top: 180, dur: 16, delay: -7 },
-  { kind: "zombie", top: 640, dur: 28, delay: -12 },
-  { kind: "vampire", top: 452, dur: 38, delay: -26 },
-  { kind: "skeleton", top: 470, dur: 46, delay: -9 },
-  { kind: "mummy", top: 630, dur: 52, delay: -33 },
-  { kind: "spider", top: 690, dur: 22, delay: -15 },
+  { kind: "ghost", top: 210, dur: 24, delay: -4 },
+  { kind: "zombie", top: 540, dur: 32, delay: -18 },
+  { kind: "bat", top: 120, dur: 16, delay: -7 },
+  { kind: "zombie", top: 690, dur: 28, delay: -12 },
+  { kind: "vampire", top: 520, dur: 38, delay: -26 },
+  { kind: "skeleton", top: 600, dur: 46, delay: -9 },
+  { kind: "mummy", top: 660, dur: 52, delay: -33 },
+  { kind: "spider", top: 740, dur: 22, delay: -15 },
   { kind: "banshee", top: 300, dur: 30, delay: -20 },
-  { kind: "possessed", top: 120, dur: 27, delay: -6 },
-  { kind: "ghost", top: 660, dur: 20, delay: -2 },
+  { kind: "possessed", top: 90, dur: 27, delay: -6 },
+  { kind: "ghost", top: 360, dur: 20, delay: -2 },
 ];
 
 const STEPS = [

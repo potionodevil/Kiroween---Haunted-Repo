@@ -133,7 +133,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
             style={{ flex: "999 1 620px", minWidth: 0, border: "1px solid #33244A", borderRadius: 20, padding: 24, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}
           >
             {visible.map((f) => (
-              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} onFix={(x) => void fixOne(x)} fixState={cardFix[f.id]} ritualHref={`/exorcism/${f.id}?${q}`} onOpen={(x, from) => setFocus({ id: x.id, from })} />
+              <CreatureCard key={f.id} finding={f} banished={banished.has(f.id)} pinned={active?.id === f.id} onPick={setPicked} onFix={(x) => void fixOne(x)} fixState={cardFix[f.id]} ritualHref={`/exorcism/${f.id}?${q}`} onOpen={(x, from) => setFocus({ id: x.id, from })} repo={result.repo} gitRef={result.defaultBranch} demo={demo} />
             ))}
             {visible.length === 0 && <p style={{ color: MUTED }}>No creatures of this kind.</p>}
           </section>

@@ -251,8 +251,7 @@ body {
 .cc { z-index: 1; }
 .cc:hover, .cc:focus-within, .cc-open { z-index: 30; }
 .fixpop {
-  position: absolute; left: -10px; right: -10px; top: calc(100% - 14px);
-  min-width: 260px; padding: 14px; border-radius: 14px;
+  position: absolute; top: -6px; width: 420px; max-width: 80vw; padding: 14px; border-radius: 14px;
   background: linear-gradient(160deg, #2a1d3b, #1C1229); border: 2px solid var(--kc, #F2B544); color: #F3ECDD; cursor: pointer;
   box-shadow: 0 0 0 4px #160E22, 0 0 0 5px color-mix(in srgb, var(--kc, #F2B544) 45%, transparent), 0 22px 44px #000000aa;
   opacity: 0; transform: translateY(10px) scale(.97); pointer-events: none;
@@ -261,7 +260,7 @@ body {
 .fixpop .fc-corner { width: 8px; height: 8px; box-shadow: none; }
 .fixpop .fc-tl { top: -5px; left: -5px; } .fixpop .fc-tr { top: -5px; right: -5px; }
 .fixpop::before {
-  content: ""; position: absolute; top: -9px; left: 50%; width: 14px; height: 14px; margin-left: -7px;
+  content: ""; position: absolute; top: 40px; width: 14px; height: 14px;
   background: #2a1d3b; border-left: 2px solid var(--kc, #F2B544); border-top: 2px solid var(--kc, #F2B544); transform: rotate(45deg);
 }
 .cc:hover .fixpop, .cc:focus-within .fixpop, .cc-open .fixpop { opacity: 1; transform: none; pointer-events: auto; }
@@ -334,3 +333,21 @@ body:has(.landing) .sidedecor { display: none !important; }
 .tcard-pop .tinner, .tcard-pop:hover .tinner { transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .tcard-pop { cursor: pointer; filter: drop-shadow(0 30px 60px #000000aa); }
 @media (prefers-reduced-motion: reduce) { .tcard-pop .tinner { transition: none; } }
+
+/* Hovered creature: framed box, code popup beside it (right, or left near the screen edge) */
+.cc > .card3d { transition: transform .2s ease, box-shadow .2s ease, outline-color .2s; outline: 3px solid transparent; outline-offset: 4px; }
+.cc:hover > .card3d, .cc:focus-within > .card3d { outline-color: var(--kc); box-shadow: 0 0 0 1px #160E22, 0 0 26px color-mix(in srgb, var(--kc) 45%, transparent), 0 18px 30px #00000055; }
+.cc-right .fixpop { left: calc(100% + 18px); transform-origin: left top; }
+.cc-left .fixpop { right: calc(100% + 18px); transform-origin: right top; }
+.cc-right .fixpop::before { left: -9px; transform: rotate(-45deg); }
+.cc-left .fixpop::before { right: -9px; transform: rotate(135deg); }
+.cc-right .fixpop { transform: translateX(-10px) scale(.97); } .cc-left .fixpop { transform: translateX(10px) scale(.97); }
+.cc:hover .fixpop, .cc:focus-within .fixpop, .cc-open .fixpop { transform: none; }
+.code-win { margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--kc) 45%, #33244A); background: #0F0918; }
+.code-bar { display: flex; gap: 8px; padding: 6px 10px; font-size: 11px; color: #C2B6CF; background: #1C1229; border-bottom: 1px solid #33244A; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.code-lines { margin: 0; padding: 6px 0; font-size: 11.5px; line-height: 1.6; max-height: 240px; overflow: auto; }
+.code-lines > div { padding: 0 10px 0 0; white-space: pre; color: #C2B6CF; }
+.code-n { display: inline-block; width: 38px; padding-right: 10px; text-align: right; color: #5A4D6E; user-select: none; }
+.code-hit { background: color-mix(in srgb, var(--kc) 16%, transparent); box-shadow: inset 3px 0 0 var(--kc), inset 0 0 0 1px color-mix(in srgb, var(--kc) 70%, transparent); color: #F3ECDD !important; }
+.code-hit .code-n { color: var(--kc); }
+.code-msg { padding: 10px; font-size: 12.5px; color: #9C8FAE; }

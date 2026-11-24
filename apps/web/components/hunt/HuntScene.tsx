@@ -8,24 +8,29 @@ import { scanQuery } from "@/lib/client/session";
 import { KIND_LABEL, SEVERITY_LABEL } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
 import { LOOK, accessibleName, location } from "@/components/house/CreatureCard";
+import { flies, laneFor } from "@/lib/motion";
 
-/** Lanes and walking speeds from the design kit; findings take them in order. */
-const LANES = [
-  { top: 244, dur: 26, delay: -3 },
-  { top: 258, dur: 34, delay: -20 },
-  { top: 70, dur: 18, delay: -9 },
-  { top: 330, dur: 30, delay: -14 },
-  { top: 372, dur: 40, delay: -5 },
-  { top: 300, dur: 36, delay: -27 },
-  { top: 420, dur: 20, delay: -8 },
-  { top: 250, dur: 44, delay: -30 },
-  { top: 362, dur: 50, delay: -12 },
-  { top: 110, dur: 30, delay: -21 },
-  { top: 200, dur: 34, delay: -3 },
-  { top: 60, dur: 26, delay: -14 },
-  { top: 150, dur: 22, delay: -16 },
+/**
+ * Lanes: flyers in the air above the wainscot, walkers with their feet on the floor boards
+ * (the hall art puts the floor at 2/3 of the height, 347px of 520).
+ */
+const AIR = [
+  { top: 40, dur: 18, delay: -9 },
+  { top: 120, dur: 30, delay: -21 },
+  { top: 80, dur: 26, delay: -14 },
+  { top: 160, dur: 22, delay: -16 },
+  { top: 60, dur: 34, delay: -3 },
+  { top: 140, dur: 28, delay: -11 },
 ];
-const FLYERS = new Set(["bat", "poltergeist", "possessed"]);
+const GROUND = [
+  { top: 262, dur: 26, delay: -3 },
+  { top: 330, dur: 34, delay: -20 },
+  { top: 296, dur: 30, delay: -14 },
+  { top: 372, dur: 40, delay: -5 },
+  { top: 280, dur: 36, delay: -27 },
+  { top: 350, dur: 44, delay: -30 },
+  { top: 312, dur: 50, delay: -12 },
+];
 const SPEEDS = [
   { label: "Slow", value: 0.6 },
   { label: "Normal", value: 1 },
@@ -40,7 +45,8 @@ export function HuntScene({ ctx }: { ctx: GateContext }) {
 
   const ordered = sortFindings(result.findings);
   const alive = ordered.filter((f) => !banished.has(f.id));
-  const inScene = alive.slice(0, LANES.length);
+  const inScene = alive.slice(0, 13);
+  const used = { air: 0, ground: 0 };
   const log = ordered.filter((f) => banished.has(f.id)).map((f) => f.title);
   const banishedCount = result.findings.length - alive.length;
 
@@ -91,13 +97,13 @@ export function HuntScene({ ctx }: { ctx: GateContext }) {
           <div aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 40, background: "linear-gradient(transparent,#160E22)" }} />
 
           {inScene.map((f, i) => {
-            const lane = LANES[i % LANES.length]!;
+            const lane = laneFor(f.kind, AIR, GROUND, used);
             const L = LOOK[f.severity];
             const pos: CSSProperties = { top: lane.top, animationDuration: `${(lane.dur / speed).toFixed(1)}s`, animationDelay: `${(lane.delay / speed).toFixed(1)}s` };
             const tip: CSSProperties = { textAlign: "left", background: "#22172F", border: `1px solid ${L.border}`, borderRadius: 12, padding: 14, boxShadow: "0 12px 30px rgba(0,0,0,.45)", ...(lane.top < 220 ? { bottom: "auto", top: "calc(100% + 10px)" } : {}) };
             return (
               <button key={f.id} type="button" className="hr-e" onClick={() => banish([f.id])} aria-label={`${accessibleName(f, false)}. ${f.fix} Press to ${action(f)}.`} style={pos}>
-                <div className={FLYERS.has(f.kind) ? "hr-wave" : undefined}>
+                <div className={flies(f.kind) ? "hr-wave" : undefined}>
                   <Sprite kind={f.kind} />
                 </div>
                 <div className="hr-tip" style={tip}>

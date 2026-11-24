@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
+import { useSnippet } from "@/lib/client/snippet";
 import { commentFor, type Finding, type Severity } from "@haunted/core";
 import { KIND_COLOR, KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
@@ -16,6 +17,10 @@ interface Props {
   ritualHref?: string;
   /** Click: fly this card to the front. */
   onOpen?: (f: Finding, from: DOMRect) => void;
+  repo: string;
+  /** Default branch, used when the finding has no commit. */
+  gitRef: string;
+  demo: boolean;
 }
 
 /** Card colors per severity, from the design kit. */
@@ -60,7 +65,15 @@ function preview(f: Finding): { sign: string; text: string }[] {
 
 const SIGN: Record<string, string> = { "+": "#BDEBC5", "-": "#FF9B8A", " ": "#9C8FAE" };
 
-export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixState, ritualHref, onOpen }: Props) {
+export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixState, ritualHref, onOpen, repo, gitRef, demo }: Props) {
+  const [hot, setHot] = useState(false);
+  const [side, setSide] = useState<"right" | "left">("right");
+  const snippet = useSnippet(f, repo, gitRef, demo, hot);
+  const enter = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    setSide(r.right + 440 > window.innerWidth ? "left" : "right");
+    setHot(true);
+  };
   const L = LOOK[f.severity];
   const canFix = Boolean(f.autoFixable && f.patch && f.kind !== "ghost" && onFix);
   const lines = canFix ? preview(f) : [];
@@ -68,7 +81,12 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
   const sticky = busy;
 
   return (
-    <div className={`cc${sticky ? " cc-open" : ""}`} style={{ position: "relative" }}>
+    <div
+      className={`cc cc-${side}${sticky ? " cc-open" : ""}`}
+      style={{ position: "relative", "--kc": KIND_COLOR[f.kind] } as CSSProperties}
+      onMouseEnter={(e) => enter(e.currentTarget)}
+      onFocus={(e) => enter(e.currentTarget)}
+    >
       <button
         type="button"
         className="card3d"
@@ -110,7 +128,6 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
         className="fixpop"
         role="group"
         aria-label={`Fix for ${f.title}`}
-        style={{ "--kc": KIND_COLOR[f.kind] } as CSSProperties}
         onClick={(e) => {
           // Clicking the popup (not its buttons or links) brings the card to the front.
           if ((e.target as HTMLElement).closest("button, a")) return;
@@ -124,7 +141,31 @@ export function CreatureCard({ finding: f, banished, pinned, onPick, onFix, fixS
           <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.4, color: KIND_COLOR[f.kind], textTransform: "uppercase" }}>{KIND_LABEL[f.kind].one}</span>
           <span className="font-mono" style={{ marginLeft: "auto", fontSize: 11, color: "#9C8FAE" }}>{f.rule}</span>
         </div>
-        <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.45 }}>{f.fix}</p>
+        <div className="code-win">
+          <div className="code-bar font-mono">
+            <span>{f.file}</span>
+            {f.commit && <span style={{ marginLeft: "auto", color: "#9C8FAE" }}>@{f.commit.slice(0, 7)}</span>}
+          </div>
+          {snippet === undefined ? (
+            <div className="code-msg">Loading the code…</div>
+          ) : snippet === null ? (
+            <div className="code-msg">{f.kind === "vampire" ? `Found in your lockfile${f.dependencyPath?.length ? `: ${f.dependencyPath.join(" → ")}` : "."}` : "No code preview for this one."}</div>
+          ) : (
+            <pre className="font-mono code-lines">
+              {snippet.lines.map((l, i) => {
+                const n = snippet.start + i;
+                const hit = snippet.line === n;
+                return (
+                  <div key={n} className={hit ? "code-hit" : undefined}>
+                    <span className="code-n">{n}</span>
+                    {l || " "}
+                  </div>
+                );
+              })}
+            </pre>
+          )}
+        </div>
+        <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.45 }}>{f.fix}</p>
 
         {lines.length > 0 && (
           <pre className="font-mono" style={{ margin: "10px 0 0", padding: "8px 10px", borderRadius: 10, background: "#0F0918", border: "1px solid #33244A", fontSize: 11.5, lineHeight: 1.55, overflow: "hidden" }}>

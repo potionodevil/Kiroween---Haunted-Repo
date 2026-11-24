@@ -29,7 +29,7 @@ export function HauntedLoader({ label, sub }: { label: string; sub?: string }) {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 text-center">
       <div className="loader-hall" aria-hidden="true">
-        <div className="loader-walk" style={{ animationDelay: "0s" }}>
+        <div className="loader-walk loader-fly" style={{ animationDelay: "0s", bottom: 40 }}>
           <Sprite kind="ghost" scale={0.7} />
         </div>
         <div className="loader-walk" style={{ animationDelay: "-2.2s" }}>
