@@ -408,3 +408,5 @@ body:has(.landing) .sidedecor { display: none !important; }
 .cc-left .fixpop::after { right: -22px; }
 /* Keep page content clear of the left rail when the side margins are narrow */
 @media (min-width: 900px) and (max-width: 1599px) { body:has(.sidenav) { padding-left: 84px; } }
+/* Touch screens and phones: no hover popup (it has no room beside the card); a tap opens the focus card with the same fix. */
+@media (hover: none), (max-width: 899px) { .fixpop { display: none !important; } }
