@@ -25,6 +25,13 @@ describe("applyPatchText", () => {
     expect(applyPatchText("{\n\"a\": 1\n}", j, "package.json", "fix")).toBe("{\n\"a\": 2\n}");
   });
 
+  it("uses a JSX comment inside JSX", () => {
+    const before = "return (\n  <div>\n    {a == b && <b/>}\n  </div>\n);";
+    const after = before.replace("a == b", "a === b");
+    const p = unifiedPatch("src/A.tsx", before, after)!;
+    expect(applyPatchText(before, p, "src/A.tsx", "zombie/eqeqeq")).toContain("    {/* haunted-repo: zombie/eqeqeq */}\n    {a === b && <b/>}");
+  });
+
   it("creates a file from /dev/null", () => {
     const p = "--- /dev/null\n+++ b/SECURITY.md\n@@ -0,0 +1,2 @@\n+# Security\n+Mail us.\n";
     expect(applyParsed("", parsePatches(p)[0]!)).toBe("# Security\nMail us.");

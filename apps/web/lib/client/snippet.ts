@@ -61,7 +61,7 @@ export function useSnippet(f: Finding, repo: string, ref: string, demo: boolean,
 export function withFix(f: Finding, s: Snippet | null | undefined): Finding {
   if (f.patch || f.kind === "ghost" || !s?.line || !canSynthesize(f.rule)) return f;
   const text = s.lines[s.line - s.start];
-  if (text === undefined || text.includes("<REDACTED>")) return f;
+  if (text === undefined || text.includes("<REDACTED>") || text.endsWith("…")) return f;
   const patch = synthPatch(f, text);
   return patch ? { ...f, patch, autoFixable: true } : f;
 }

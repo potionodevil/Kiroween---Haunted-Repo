@@ -53,10 +53,12 @@ export function commentFor(file: string): string | null {
   return null;
 }
 
-function markerLine(file: string, indent: string, note: string): string | null {
+function markerLine(file: string, indent: string, note: string, line = ""): string | null {
   const c = commentFor(file);
   if (!c) return null;
   const text = `haunted-repo: ${note}`;
+  // Inside JSX a "//" line would render as text, so JSX children get {/* ... */}.
+  if (/\.[jt]sx$/i.test(file) && /^\s*[<{]/.test(line)) return `${indent}{/* ${text} */}`;
   return c === "<!--" ? `${indent}<!-- ${text} -->` : `${indent}${c} ${text}`;
 }
 
@@ -86,7 +88,7 @@ export function applyParsed(source: string, patch: ParsedPatch, mark?: string): 
       }
       if (mark && !marked && !patch.created) {
         const indent = /^\s*/.exec(l[0] === "-" ? (src[pos] ?? "") : body)?.[0] ?? "";
-        const m = markerLine(patch.file, indent, mark);
+        const m = markerLine(patch.file, indent, mark, l[0] === "-" ? (src[pos] ?? "") : body);
         if (m) out.push(m);
         marked = true;
       }

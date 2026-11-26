@@ -88,7 +88,7 @@ export function FocusCard({
           <div className="holo" style={{ opacity: 0.6, borderRadius: 14 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="font-display" style={{ fontSize: 26, color }}>{KIND_LABEL[f.kind].one}</span>
-            <span style={{ marginLeft: "auto", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</span>
+            <span style={{ marginLeft: "auto", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Banished" : SEVERITY_LABEL[f.severity]}</span>
           </div>
           <div className="hr-bob" style={{ height: 150, display: "flex", alignItems: "flex-end", justifyContent: "center", margin: "6px 0 10px", background: "radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--kc) 22%, transparent), transparent 65%)" }}>
             <Sprite kind={f.kind} scale={1.2} paused={banished} />
@@ -188,8 +188,8 @@ export function FocusCard({
                     {fixState.text} ↗
                   </a>
                 ) : (
-                  <button type="button" className="fixbtn" style={{ width: "auto", padding: "0 16px", marginTop: 0 }} disabled={banished || fixState?.tone === "run"} onClick={() => onFix(f)}>
-                    {fixState?.tone === "run" ? "Opening a pull request…" : banished ? "Fixed" : "Fix it in the repo"}
+                  <button type="button" className="fixbtn" style={{ width: "auto", padding: "0 16px", marginTop: 0 }} disabled={fixState?.tone === "run"} onClick={() => onFix(f)}>
+                    {fixState?.tone === "run" ? "Opening a pull request…" : "Fix it in the repo"}
                   </button>
                 ))}
               {f.kind === "ghost" && (

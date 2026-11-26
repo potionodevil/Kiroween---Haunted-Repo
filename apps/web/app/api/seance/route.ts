@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * sandboxes cost money, and running someone else's code on their behalf needs their consent.
  */
 export async function POST(req: Request) {
-  const blocked = guard(req, { name: "seance", max: 3, windowMs: 600000 });
+  const blocked = guard(req, { name: "seance", max: 6, windowMs: 600000 });
   if (blocked) return blocked;
   const s = await getSession();
   if (!s) return NextResponse.json({ error: "Log in with GitHub to run a live séance." }, { status: 401 });
@@ -35,10 +35,16 @@ export async function POST(req: Request) {
   }
 
   const enc = new TextEncoder();
+  const run = runSeance(ref.owner, ref.repo, branch);
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      for await (const ev of runSeance(ref.owner, ref.repo, branch)) controller.enqueue(enc.encode(`${JSON.stringify(ev)}\n`));
-      controller.close();
+    async pull(controller) {
+      const { value, done } = await run.next();
+      if (done) controller.close();
+      else controller.enqueue(enc.encode(`${JSON.stringify(value)}\n`));
+    },
+    // The visitor closed the tab: end the generator so its finally block stops the sandbox (no idle cost).
+    async cancel() {
+      await run.return(undefined);
     },
   });
   return new Response(stream, { headers: { "Content-Type": "application/x-ndjson", "Cache-Control": "no-store" } });

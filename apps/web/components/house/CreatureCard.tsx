@@ -135,7 +135,7 @@ export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fi
         <div className="font-mono" style={{ marginTop: 4, fontSize: 12, color: "#C2B6CF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {location(f)}
         </div>
-        <div style={{ marginTop: 12, alignSelf: "flex-start", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Fixed" : SEVERITY_LABEL[f.severity]}</div>
+        <div style={{ marginTop: 12, alignSelf: "flex-start", ...badgeStyle(f.severity, banished) }}>{fixState?.tone === "ok" ? "PR open" : banished ? "Banished" : SEVERITY_LABEL[f.severity]}</div>
       </button>
 
       {/* Hover popup: the fix, a preview of the change, and one click to put it in the repo. */}
@@ -199,8 +199,8 @@ export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fi
               {fixState.text} ↗
             </a>
           ) : (
-            <button type="button" className="fixbtn" disabled={busy || banished} onClick={() => onFix?.(f)} style={busy || banished ? { background: "#45345E", color: "#C2B6CF" } : undefined}>
-              {busy ? "Opening a pull request…" : banished ? "Fixed" : "Fix it in the repo"}
+            <button type="button" className="fixbtn" disabled={busy} onClick={() => onFix?.(f)} style={busy ? { background: "#45345E", color: "#C2B6CF" } : undefined}>
+              {busy ? "Opening a pull request…" : "Fix it in the repo"}
             </button>
           )
         ) : f.kind === "ghost" && ritualHref ? (
