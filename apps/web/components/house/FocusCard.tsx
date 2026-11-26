@@ -8,6 +8,7 @@ import { Sprite } from "@/components/Sprite";
 import { badgeStyle } from "./CreatureCard";
 import type { PrState } from "./ScanTerminal";
 import { useSnippet, withFix } from "@/lib/client/snippet";
+import { vampireUpgrade } from "@/lib/client/pr";
 
 type Tab = "code" | "why" | "how" | "fix";
 const TABS: [Tab, string][] = [["code", "Where it is"], ["why", "What it means"], ["how", "How we measured it"], ["fix", "The fix"]];
@@ -48,7 +49,7 @@ export function FocusCard({
   const closeRef = useRef<HTMLButtonElement>(null);
   const color = KIND_COLOR[f.kind];
   const m = measurement(f);
-  const canFix = Boolean(f.autoFixable && f.patch && f.kind !== "ghost");
+  const canFix = Boolean((f.autoFixable && f.patch && f.kind !== "ghost") || (vampireUpgrade(f)));
 
   // Fly in: start at the grid card's box, end at the center (FLIP with the Web Animations API).
   useLayoutEffect(() => {

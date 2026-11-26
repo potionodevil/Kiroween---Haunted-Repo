@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { useSnippet, withFix } from "@/lib/client/snippet";
+import { vampireUpgrade } from "@/lib/client/pr";
 import { commentFor, type Finding, type Severity } from "@haunted/core";
 import { KIND_COLOR, KIND_LABEL, SEVERITY_LABEL, SEVERITY_SCALE } from "@/lib/sprites";
 import { Sprite } from "@/components/Sprite";
@@ -90,7 +91,7 @@ export function CreatureCard({ finding: raw, banished, pinned, onPick, onFix, fi
     setHot(true);
   };
   const L = LOOK[f.severity];
-  const canFix = Boolean(f.autoFixable && f.patch && f.kind !== "ghost" && onFix);
+  const canFix = Boolean((f.autoFixable && f.patch && f.kind !== "ghost" && onFix) || (vampireUpgrade(f) && onFix));
   const lines = canFix ? preview(f) : [];
   const busy = fixState?.tone === "run";
   const sticky = busy;

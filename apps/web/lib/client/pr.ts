@@ -30,3 +30,31 @@ export const requestFixPr = (repo: string, list: Finding[], next: string) =>
 
 /** A pull request that adds the Haunting score badge to the README. */
 export const requestBadgePr = (repo: string, next: string) => post("/api/readme-badge", { repo }, next);
+
+/** Name and safe version for a vampire, or null when OSV knows no fixed version. */
+export function vampireUpgrade(f: Finding): { name: string; version: string } | null {
+  // Only npm and pnpm lockfiles can be rewritten in the sandbox for now.
+  if (f.kind !== "vampire" || !f.minimalUpgrade || !/(package-lock.json|pnpm-lock.yaml)$/.test(f.file)) return null;
+  const name = f.title.replace(/^Vulnerable /, "").replace(/ [^ ]+$/, "");
+  return name ? { name, version: f.minimalUpgrade } : null;
+}
+
+/**
+ * Opens the right pull requests for a mixed list: vampires go to the sandbox lockfile fix (one PR per
+ * lockfile), everything else to the patch PR. Returns the first PR or the first error.
+ */
+export async function requestFixes(repo: string, list: Finding[], next: string): Promise<PrResult> {
+  const byLock = new Map<string, { name: string; version: string }[]>();
+  const rest: Finding[] = [];
+  for (const f of list) {
+    const up = vampireUpgrade(f);
+    if (up && /(package-lock\.json|pnpm-lock\.yaml)$/.test(f.file)) byLock.set(f.file, [...(byLock.get(f.file) ?? []), up]);
+    else if (f.patch && f.kind !== "vampire") rest.push(f);
+  }
+  const results: PrResult[] = [];
+  if (rest.length) results.push(await requestFixPr(repo, rest, next));
+  for (const [lockfile, upgrades] of byLock) results.push(await post("/api/vampire-pr", { repo, lockfile, upgrades }, next));
+  const ok = results.filter((r) => r.tone === "ok");
+  if (ok.length === 0) return results[0] ?? { tone: "bad", text: "Nothing to fix" };
+  return ok.length === 1 ? ok[0]! : { ...ok[0]!, text: `${ok.length} pull requests opened` };
+}

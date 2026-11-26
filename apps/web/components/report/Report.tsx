@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { requestBadgePr, requestFixPr, type PrResult } from "@/lib/client/pr";
+import { requestBadgePr, requestFixes, vampireUpgrade, type PrResult } from "@/lib/client/pr";
 import { CREATURE_KINDS, autopsyMarkdown, cycloneDx, scoreLabel, score as calcScore, type Finding, type Severity } from "@haunted/core";
 import type { GateContext } from "@/components/ScanGate";
 import { useBanished } from "@/lib/client/useBanished";
@@ -36,7 +36,7 @@ export function Report({ ctx }: { ctx: GateContext }) {
   const badgeUrl = `${origin}/api/badge?${demo ? "demo=1" : `repo=${encodeURIComponent(result.repo)}`}`;
   const badgeMd = `[![Haunting score](${badgeUrl})](${origin}/house?${q})`;
 
-  const fixable = open.filter((f) => f.autoFixable && f.patch && f.kind !== "ghost");
+  const fixable = open.filter((f) => (f.autoFixable && f.patch && f.kind !== "ghost") || vampireUpgrade(f) !== null);
   const here = `/report?${q}&cached=1`;
   const applyBadge = async () => {
     if (demo) return setBadgePr({ tone: "ok", text: "Pull request #49 opened (demo): badge added under the README title" });
@@ -50,7 +50,7 @@ export function Report({ ctx }: { ctx: GateContext }) {
       return setFixPr({ tone: "ok", text: `Pull request #48 opened (demo) · ${fixable.length} fixes, each marked in the code` });
     }
     setFixPr({ tone: "run", text: "Opening a pull request…" });
-    const r = await requestFixPr(result.repo, fixable, here);
+    const r = await requestFixes(result.repo, fixable, here);
     if (r.tone === "ok") banish(fixable.map((f) => f.id));
     setFixPr(r);
   };

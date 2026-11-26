@@ -14,6 +14,7 @@ import { Onboarding, useFirstVisit } from "./Onboarding";
 import { FocusCard } from "./FocusCard";
 import { HouseRoom } from "./HouseRoom";
 import { loginHref, logout, useViewer } from "@/lib/client/viewer";
+import { requestFixes, vampireUpgrade } from "@/lib/client/pr";
 
 type Filter = "all" | CreatureKind;
 const MUTED = "#C2B6CF";
@@ -29,7 +30,7 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
 
   const alive = useMemo(() => findings.filter((f) => !banished.has(f.id)), [findings, banished]);
   const count = (k: CreatureKind) => alive.filter((f) => f.kind === k).length;
-  const autoFixable = alive.filter((f) => f.autoFixable && f.kind !== "ghost" && f.patch);
+  const autoFixable = alive.filter((f) => (f.autoFixable && f.kind !== "ghost" && f.patch) || vampireUpgrade(f) !== null);
   const liveScore = calcScore(findings, banished);
   // Time machine (feature 8): creatures appear at introducedAt; findings without a date live at HEAD.
   const dates = useMemo(() => findings.map((f) => f.introducedAt).filter((d): d is string => Boolean(d)).sort(), [findings]);
@@ -72,22 +73,9 @@ export function HauntedHouse({ result, demo }: { result: ScanResult; demo: boole
       location.href = loginHref(`/house?${q}&cached=1`);
       return { tone: "run", text: "Logging in with GitHub…" };
     }
-    try {
-      const res = await fetch("/api/fix-pr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo: result.repo, mark: true, fixes: list.map((f) => ({ rule: f.rule, title: f.title, patch: f.patch })) }),
-      });
-      const d = (await res.json()) as { url?: string; number?: number; error?: string; installUrl?: string; skipped?: string[] };
-      if (d.url) {
-        banish(list.map((f) => f.id));
-        return { tone: "ok", text: `Pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}`, url: d.url };
-      }
-      if (d.installUrl) return { tone: "bad", text: "Install the GitHub App first", url: d.installUrl };
-      return { tone: "bad", text: d.error ?? `Failed (${res.status})` };
-    } catch {
-      return { tone: "bad", text: "Could not reach the server" };
-    }
+    const r = await requestFixes(result.repo, list, `/house?${q}&cached=1`);
+    if (r.tone === "ok") banish(list.map((f) => f.id));
+    return r;
   };
   const fixPr = async () => {
     if (autoFixable.length === 0) return;
