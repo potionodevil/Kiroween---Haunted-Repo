@@ -9,6 +9,7 @@ import { Sprite } from "@/components/Sprite";
 import { CopyButton } from "@/components/house/CopyButton";
 import { SEVERITY_LABEL } from "@/lib/sprites";
 import { DecoyGhost } from "./DecoyGhost";
+import { useViewer } from "@/lib/client/viewer";
 
 type Check = { state: "idle" } | { state: "checking" } | { state: "gone" } | { state: "still"; commits: number };
 
@@ -23,6 +24,9 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
   const { result, demo, rescan } = ctx;
   const q = scanQuery(result.repo, demo);
   const back = `/house?${q}&cached=1`;
+  // Proven owners see the masked value too (security.md rule 8), not only the demo.
+  const viewer = useViewer(demo ? null : result.repo);
+  const reveal = demo || Boolean(viewer?.owner);
   const ghost = result.findings.find((f) => f.id === id && f.kind === "ghost");
   const { banished, banish } = useBanished(result.repo);
   const [done, setDone] = useState<Set<StepId>>(new Set());
@@ -107,7 +111,7 @@ export function Ritual({ id, ctx }: { id: string; ctx: GateContext }) {
             </div>
             <h1 style={{ margin: "14px 0 0", fontSize: 32 }}>{ghost.title}</h1>
             <div className="font-mono" style={{ marginTop: 14, fontSize: 15, background: "#160E22", border: "1px solid #45345E", borderRadius: 10, padding: 12 }}>
-              {demo && ghost.masked ? ghost.masked : "Value hidden: not proven to be your repo"}
+              {reveal && ghost.masked ? ghost.masked : "Value hidden: not proven to be your repo"}
             </div>
             {isBoss && (
               <div style={{ marginTop: 18, textAlign: "left" }} aria-label={`Boss hit points: ${hp} of ${commits}`}>

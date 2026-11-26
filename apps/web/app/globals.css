@@ -406,3 +406,5 @@ body:has(.landing) .sidedecor { display: none !important; }
 .fixpop::after { content: ""; position: absolute; top: 0; bottom: 0; width: 22px; }
 .cc-right .fixpop::after { left: -22px; }
 .cc-left .fixpop::after { right: -22px; }
+/* Keep page content clear of the left rail when the side margins are narrow */
+@media (min-width: 900px) and (max-width: 1599px) { body:has(.sidenav) { padding-left: 84px; } }
