@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { parseRepo, redactLine } from "@haunted/core";
 import { INSTALL_URL, canPush, getSession, userApi } from "@/lib/auth";
 import { guard } from "@/lib/guard";
+import { verifyPr } from "@/lib/verify";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -15,6 +16,7 @@ const b64 = (s: string) => Buffer.from(s, "utf8").toString("base64");
  * lockfile rewritten in a Vercel Sandbox. Only for logged-in owners with the app installed.
  */
 export async function POST(req: Request) {
+  const started = Date.now();
   const blocked = guard(req, { name: "vampire-pr", max: 4, windowMs: 600_000 });
   if (blocked) return blocked;
   const s = await getSession();
@@ -76,5 +78,7 @@ export async function POST(req: Request) {
     }),
   });
   if (!pr.data.html_url) return NextResponse.json({ error: `Branch ${branch} is pushed, but the pull request failed (${pr.status}).` }, { status: 502 });
-  return NextResponse.json({ url: pr.data.html_url, number: pr.data.number });
+  const num = pr.data.number;
+  if (num) after(() => verifyPr(s.token, ref.owner, ref.repo, branch, num, 280_000 - (Date.now() - started)));
+  return NextResponse.json({ url: pr.data.html_url, number: num, verifying: Boolean(num) });
 }

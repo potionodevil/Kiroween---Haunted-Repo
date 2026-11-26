@@ -11,12 +11,12 @@ export interface PrResult {
 async function post(path: string, body: unknown, next: string): Promise<PrResult & { status: number }> {
   try {
     const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const d = (await res.json()) as { url?: string; number?: number; error?: string; installUrl?: string; skipped?: string[] };
+    const d = (await res.json()) as { url?: string; number?: number; error?: string; installUrl?: string; skipped?: string[]; verifying?: boolean };
     if (res.status === 401) {
       location.href = loginHref(next);
       return { tone: "run", text: "Logging in with GitHub…", status: 401 };
     }
-    if (d.url) return { tone: "ok", text: `Pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}`, url: d.url, status: res.status };
+    if (d.url) return { tone: "ok", text: `Pull request #${d.number} opened${d.skipped?.length ? ` · ${d.skipped.length} skipped` : ""}${d.verifying ? " · tests running, result comes as a PR comment" : ""}`, url: d.url, status: res.status };
     if (d.installUrl) return { tone: "bad", text: "Install the GitHub App first", url: d.installUrl, status: res.status };
     return { tone: "bad", text: d.error ?? `Failed (${res.status})`, status: res.status };
   } catch {

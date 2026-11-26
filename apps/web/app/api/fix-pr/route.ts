@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { applyPatchText, parsePatches, parseRepo } from "@haunted/core";
 import { INSTALL_URL, canPush, getSession, userApi } from "@/lib/auth";
 import { guard } from "@/lib/guard";
+import { verifyPr } from "@/lib/verify";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 interface FixIn {
@@ -23,6 +24,7 @@ const unb64 = (s: string) => Buffer.from(s, "base64").toString("utf8");
  * and the visitor has push access. Ghosts are never auto-fixed (product.md).
  */
 export async function POST(req: Request) {
+  const started = Date.now();
   const blocked = guard(req, { name: "fix-pr", max: 10, windowMs: 600000 });
   if (blocked) return blocked;
   const s = await getSession();
@@ -97,5 +99,8 @@ export async function POST(req: Request) {
     }),
   });
   if (!pr.data.html_url) return NextResponse.json({ error: `Branch ${branch} is pushed, but the pull request failed (${pr.status}).` }, { status: 502 });
-  return NextResponse.json({ url: pr.data.html_url, number: pr.data.number, applied, skipped });
+  // Test the fix before anyone merges it: a séance on the branch posts its result on the PR.
+  const num = pr.data.number;
+  if (num) after(() => verifyPr(s.token, ref.owner, ref.repo, branch, num, 270_000 - (Date.now() - started)));
+  return NextResponse.json({ url: pr.data.html_url, number: num, applied, skipped, verifying: Boolean(num) });
 }
